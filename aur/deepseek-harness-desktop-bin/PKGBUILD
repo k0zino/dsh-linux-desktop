@@ -1,0 +1,42 @@
+# Maintainer: k0zino <k0zino@users.noreply.github.com>
+# Repackages the Linux x64 .pacman from the dsh-linux-desktop fork, which adds
+# runtime fixes (asar probe rewrite, sharp WASM backend) and icon/desktop
+# integration that unpatched upstream builds lack.
+
+pkgname=deepseek-harness-desktop-bin
+_pkgver=0.2.0-rc.2
+_tag="v${_pkgver}-linux.1"
+pkgver=${_pkgver//-/}
+pkgrel=1
+pkgdesc='Desktop shell for the DeepSeek Harness agent runtime (fixed Linux x64 build)'
+arch=('x86_64')
+url='https://github.com/k0zino/dsh-linux-desktop'
+license=('MIT')
+depends=('alsa-lib' 'at-spi2-core' 'c-ares' 'ffmpeg' 'gtk3' 'http-parser'
+         'libevent' 'libnotify' 'libsecret' 'libvpx' 'libxss' 'libxslt'
+         'libxtst' 'minizip' 'nss' 're2' 'snappy' 'util-linux-libs' 'xdg-utils')
+optdepends=('libappindicator-gtk3: system tray icon support')
+provides=('deepseek-harness-desktop')
+conflicts=('deepseek-harness-desktop')
+options=('!strip' '!debug')
+_pacman="deepseek-harness-${_pkgver}-linux-x64.pacman"
+source=("${_pacman}::${url}/releases/download/${_tag}/${_pacman}"
+        "LICENSE::https://raw.githubusercontent.com/k0zino/dsh-linux-desktop/master/LICENSE")
+noextract=("${_pacman}")
+sha256sums=('452accea4c6e50c88ad49817c2825c870399cbe29cb1ec4e9166cdeb4a860874'
+            'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
+
+package() {
+    bsdtar -xf "${srcdir}/${_pacman}" -C "${pkgdir}" \
+        --exclude='.PKGINFO' --exclude='.MTREE' --exclude='.INSTALL' --exclude='.BUILDINFO'
+
+    # The source .pacman performs these in its .INSTALL script, which pacman
+    # does not run when the archive is repackaged through a PKGBUILD.
+    install -d "${pkgdir}/usr/bin"
+    ln -s '/opt/DeepSeek Harness/deepseek-harness' "${pkgdir}/usr/bin/deepseek-harness"
+    chmod 4755 "${pkgdir}/opt/DeepSeek Harness/chrome-sandbox"
+
+    install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "${pkgdir}/opt/DeepSeek Harness/LICENSE.electron.txt" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.electron.txt"
+}
