@@ -1,77 +1,63 @@
-# DeepSeek Harness
+# dsh-linux-desktop
 
-English | [中文](README.zh.md)
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 桌面版的社区 Linux 移植。官方桌面安装包只支持 macOS 和 Windows，本仓库在上游源码（MIT 协议）基础上补齐了 **Linux x86_64** 的完整打包链路，可产出 **deb / rpm / pacman / AppImage** 四种安装包。
 
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
+> English: A community Linux port of the DeepSeek Harness desktop app. The upstream desktop packaging only targets macOS and Windows; this repo adds a complete `linux-x64` packaging pipeline that produces **deb, rpm, pacman, and AppImage** artifacts, plus the fixes needed to make the packaged app actually run (WASM sharp backend, an ASAR `lstatSync` probe fix for the LibreOffice engine fallback, and a proper icon set with desktop-entry association). See [Build from source](#从源码构建) below. Not affiliated with DeepSeek; upstream is MIT licensed.
 
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
+## 安装
 
-Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+在 [Releases](../../releases) 或本地构建产物中选择对应格式：
 
-## Developer preview
+| 格式 | 适用发行版 | 安装命令 |
+| --- | --- | --- |
+| `.deb` | Debian / Ubuntu / Deepin 等 | `sudo apt install ./deepseek-harness-*-linux-amd64.deb` |
+| `.rpm` | Fedora / RHEL / openSUSE 等 | `sudo dnf install ./deepseek-harness-*-linux-x86_64.rpm` |
+| `.pacman` | Arch / Manjaro / CachyOS 等 | `sudo pacman -U deepseek-harness-*-linux-x64.pacman` |
+| `.AppImage` | 通用，免安装 | `chmod +x deepseek-harness-*.AppImage && ./deepseek-harness-*.AppImage` |
 
-DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
+安装后应用名为 **DeepSeek Harness**，桌面环境中可直接从启动器打开（含完整的多尺寸图标）。
 
-Review the [safety notice](SAFETY.md) before running the project.
+## 从源码构建
 
-## Run
+环境要求：
 
-### Run from `npm`
+- Linux x86_64,Node `^22.19 || >=24`,pnpm(corepack 自带）
+- 打 `.rpm` 需要 `rpmbuild`。Arch 系发行版自带 `rpm-tools`;Debian 系为 `rpm` 包；没有 root 权限时可以解包发行版仓库的 `rpm-tools` 到用户目录，再通过 `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` 指向它
+- 其余打包工具（dpkg 以外的一切）由 electron-builder 内置，无需系统安装
 
-Install `Node.js`, then run:
+步骤：
 
-```sh
-npx @deepseek-ai/dsh web
-```
-
-The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
-
-### Run from source
-
-To run from a repository checkout:
-
-```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
+```bash
+git clone https://github.com/k0zino/dsh-linux-desktop.git
+cd dsh-linux-desktop
 pnpm install
-pnpm run build
-pnpm dsh web
+
+# 打包配置：创建 apps/desktop/.env.linux，内容如下
+#   DSH_DESKTOP_APP_ID=com.deepseek.harness
+#   # 可选：npm 镜像，加速内嵌运行时安装
+#   # DSH_DESKTOP_NPM_REGISTRY=https://registry.npmmirror.com
+
+pnpm --dir apps/desktop run package:linux:x64
 ```
 
-`pnpm run build` prepares the repository artifacts. `pnpm dsh web` uses those built artifacts without rebuilding.
+产物在 `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`，同目录的 `linux-unpacked/` 是可直接运行的免安装版。完整构建约 5~10 分钟，包含打包后的真实冒烟测试（启动 Host、加载前端、DOCX/XLSX/PPTX 转 PDF)。
 
-## Community and support
+## 相对上游的改动
 
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
-- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/4MrtZUhpxg">DeepSeek Harness Discord community</a>.
+全部改动集中在 `apps/desktop/`，与上游 master 保持线性 diff，便于 rebase:
 
-## Contributing
+1. **linux-x64 目标全链路**:`desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` 等注册 linux 目标、四种打包格式与本地专用（无签名、无自动更新）的发布策略。
+2. **sharp 换 WASM 后端**(`prepare-dsh.ts` 的 `installSharpWasmBackend`)：原生 sharp 在 Electron on Linux 下解码即段错误，打包时从 registry 暂存 `@img/sharp-wasm32` 并移除原生二进制。
+3. **ASAR 探针修复**(`prepare-dsh.ts` 的 `patchLibreOfficeAsarProbe`):Electron 的 asar 补丁使 `lstatSync(p, { throwIfNoEntry: false })` 对归档内缺失路径返回 `null` 而非 `undefined`，导致 `@deepseek-ai/libreoffice-kit` 把"Linux 原生引擎未安装"误判为"引擎包损坏"而无法回退 WASM 引擎。物化时把探针改写为 `Boolean(lstatSync(...))`。
+4. **NODE_PATH 泄漏修复**(`smoke-prepared-runtime.ts`)：清掉 tsx 注入的 `NODE_PATH`，避免冒烟进程从构建仓库捞到原生模块（这个修复对 macOS/Windows 同样成立）。
+5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+## 已知限制
 
-## Development
+- 仅 `linux-x64`;ARM64 Linux 未做（上游引擎包和 Electron 目标都需额外适配）。
+- Linux 构建为本地构建：不做代码签名，不含自动更新 feed。
+- 仅测试于 glibc 发行版；musl(Alpine 等）未覆盖。
 
-Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
+## 协议
 
-`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
-
-For agents, follow [AGENTS.md](AGENTS.md).
-
-## Citation
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
-
-## License
-
-[MIT](LICENSE)
-
-Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+与上游一致：[MIT](LICENSE)。上游项目版权归 DeepSeek AI 所有。
