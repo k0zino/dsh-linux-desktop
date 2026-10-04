@@ -2,10 +2,11 @@
 
 import { resolveMacOSSignatureCacheDirectory } from './macos-signature-cache-directory.mjs'
 import { packagingStep } from './packaging-step.mjs'
-import { spawn } from 'node:child_process'
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { execFileSync, spawn } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { delimiter, join, relative, resolve } from 'node:path'
+import { delimiter, dirname, join, relative, resolve } from 'node:path'
 import { desktopNodeEnvironment } from '../src/node-environment.ts'
 import { createRuntimeProjectMetadata } from '../src/project-manager.ts'
 import { DESKTOP_HOST_PROTOCOL_VERSION } from '../src/host-protocol.ts'
@@ -43,7 +44,8 @@ const STORE_ROOT = join(BUILD_ROOT, 'store')
 const RUNTIME_ROOT = BUILD_PATHS.runtime
 const PNPM_BUILD_STATE = BUILD_PATHS.dshPnpm
 const PACKAGE_SET_ROOT = BUILD_PATHS.packageSet
-const NODE = join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+const TARGET_PLATFORM = desktopTargetPlatform(resolveDesktopBuildTarget()).platform
+const NODE = join(BUILD_PATHS.electron, TARGET_PLATFORM === 'win32' ? 'electron.exe' : TARGET_PLATFORM === 'linux' ? 'electron' : 'Electron.app/Contents/MacOS/Electron')
 const PNPM = join(RUNTIME_ROOT, 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.mjs')
 
 function manifestVersion(path: string, subject: string): string {
@@ -111,6 +113,149 @@ function runPnpm(args: readonly string[]): Promise<void> {
   })
 }
 
+/**
+ * Replace staged native Linux sharp binaries with the WASM backend; native sharp decode segfaults under Electron on Linux.
+ * Removal is best-effort: pnpm may already have filtered the platform packages out of the staged tree.
+ * @returns Resolves after the staged project resolves only @img/sharp-wasm32 for sharp.
+ */
+async function installSharpWasmBackend(): Promise<void> {
+  const modules = join(BUILD_ROOT, 'node_modules')
+  const sharpManifest = JSON.parse(readFileSync(join(modules, 'sharp', 'package.json'), 'utf8')) as { version?: unknown }
+  if (typeof sharpManifest.version !== 'string') throw new Error('desktop runtime: staged sharp has no version')
+  await stageSharpWasmPackage(modules, sharpManifest.version)
+  // Native sharp appears as .pnpm entries (isolated layout) or same-named directories/links (hoisted
+  // layout); remove every occurrence so materialization never sees them.
+  const nativeEntry = /^@img\+sharp(?:-libvips)?-linux-x64@/u
+  const nativeLink = /^sharp(?:-libvips)?-linux-x64$/u
+  const removals: string[] = []
+  const sweep = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name)
+      if (nativeEntry.test(entry.name) || nativeLink.test(entry.name)) {
+        removals.push(path)
+      } else if (entry.isDirectory() && !entry.isSymbolicLink()) {
+        sweep(path)
+      }
+    }
+  }
+  sweep(modules)
+  for (const path of removals) rmSync(path, { recursive: true, force: true })
+  process.stdout.write(`desktop runtime: sharp WASM backend staged, removed ${String(removals.length)} native sharp entries\n`)
+  if (!existsSync(join(modules, '@img', 'sharp-wasm32'))) throw new Error('desktop runtime: @img/sharp-wasm32 was not installed')
+  for (const path of removals) {
+    if (existsSync(path)) throw new Error(`desktop runtime: native sharp remnant ${path}`)
+  }
+}
+
+/**
+ * Stage @img/sharp-wasm32 in the pnpm layout directly; a second pnpm install does not reliably exit under Electron.
+ * @param modules - Staged project node_modules directory.
+ * @param version - sharp version whose matching WASM backend is staged.
+ * @returns Resolves after the verified package is extracted and linked.
+ */
+async function stageSharpWasmPackage(modules: string, version: string): Promise<void> {
+  await stageRegistryPackage(modules, '@img/sharp-wasm32', version, new Map(), modules)
+}
+
+/**
+ * Stage a registry package and its transitive dependencies in the pnpm layout.
+ * @param modules - Staged project node_modules directory.
+ * @param name - Registry package name.
+ * @param range - Exact version or a caret/tilde range to resolve against the packument.
+ * @param staged - Names already staged with their extracted location; repeat requests only add the caller's link.
+ * @param linkDir - Directory receiving the package link: the parent package's `.pnpm` entry for dependencies.
+ * @returns Resolves after the package and its dependencies are extracted and linked.
+ */
+async function stageRegistryPackage(
+  modules: string, name: string, range: string, staged: Map<string, string>, linkDir: string,
+): Promise<void> {
+  let destination = staged.get(name)
+  if (destination === undefined) {
+    const registry = resolveNpmRegistry(process.env)
+    const metadata = await fetch(`${registry}/${encodeURIComponent(name)}`)
+    if (!metadata.ok) throw new Error(`desktop runtime: ${name} metadata request failed with ${String(metadata.status)}`)
+    const packument = JSON.parse(await metadata.text()) as {
+      versions?: Record<string, { dist?: { tarball?: string; integrity?: string } }>
+    }
+    const version = selectRegistryVersion(Object.keys(packument.versions ?? {}), range)
+    const entry = version === undefined ? undefined : packument.versions?.[version]
+    const tarball = entry?.dist?.tarball
+    const integrity = entry?.dist?.integrity
+    if (version === undefined || tarball === undefined || integrity === undefined) throw new Error(`desktop runtime: ${name}@${range} is not published`)
+    const archive = await fetch(tarball)
+    if (!archive.ok) throw new Error(`desktop runtime: ${name}@${version} download failed with ${String(archive.status)}`)
+    const bytes = Buffer.from(await archive.arrayBuffer())
+    const algorithm = integrity.split('-', 1)[0]
+    if (algorithm === undefined || `${algorithm}-${createHash(algorithm).update(bytes).digest('base64')}` !== integrity) {
+      throw new Error(`desktop runtime: ${name}@${version} integrity mismatch`)
+    }
+    const temporary = mkdtempSync(join(tmpdir(), 'dsh-sharp-wasm-'))
+    const pnpmEntry = join(modules, '.pnpm', `${name.replace('/', '+')}@${version}`)
+    destination = join(pnpmEntry, 'node_modules', name)
+    try {
+      writeFileSync(join(temporary, 'package.tgz'), bytes)
+      execFileSync('tar', ['-xzf', join(temporary, 'package.tgz'), '-C', temporary])
+      rmSync(pnpmEntry, { recursive: true, force: true })
+      mkdirSync(dirname(destination), { recursive: true })
+      renameSync(join(temporary, 'package'), destination)
+    } finally {
+      rmSync(temporary, { recursive: true, force: true })
+    }
+    staged.set(name, destination)
+    // The dereferencing materialization copies root links as real directories, so every staged package
+    // also needs a root link; an existing pnpm-managed link keeps its locked version.
+    const rootLink = join(modules, name)
+    if (!existsSync(rootLink)) {
+      mkdirSync(dirname(rootLink), { recursive: true })
+      symlinkSync(relative(dirname(rootLink), destination), rootLink)
+    }
+    const manifest = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')) as { dependencies?: Record<string, string> }
+    for (const [dependency, dependencyRange] of Object.entries(manifest.dependencies ?? {})) {
+      await stageRegistryPackage(modules, dependency, dependencyRange, staged, join(pnpmEntry, 'node_modules'))
+    }
+  }
+  const link = join(linkDir, name)
+  rmSync(link, { recursive: true, force: true })
+  mkdirSync(dirname(link), { recursive: true })
+  symlinkSync(relative(dirname(link), destination), link)
+}
+
+/**
+ * Rewrite the LibreOfficeKit engine-presence probe for Electron's ASAR lstatSync, which answers null
+ * instead of undefined for archive misses; the void 0 comparison misreads a packaged Linux tree as an
+ * incomplete engine install instead of falling back to the WASM engine.
+ */
+function patchLibreOfficeAsarProbe(): void {
+  const file = join(DSH_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', 'libreoffice-kit', 'lib', 'index.js')
+  const probe = 'lstatSync(join(directory, name), { throwIfNoEntry: false }) !== void 0'
+  const source = readFileSync(file, 'utf8')
+  if (!source.includes(probe)) throw new Error('desktop runtime: LibreOfficeKit engine probe not found')
+  writeFileSync(file, source.replace(probe, 'Boolean(lstatSync(join(directory, name), { throwIfNoEntry: false }))'))
+}
+
+/**
+ * Pick the greatest published version satisfying an exact version or a caret/tilde range.
+ * @param versions - Published version list from the packument.
+ * @param range - Exact version or caret/tilde range.
+ * @returns The selected version, or undefined when nothing satisfies the range.
+ */
+function selectRegistryVersion(versions: readonly string[], range: string): string | undefined {
+  const parse = (version: string): number[] | undefined => {
+    const match = /^(\d+)\.(\d+)\.(\d+)$/u.exec(version)
+    return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : undefined
+  }
+  const compare = (left: number[], right: number[]): number => left[0]! - right[0]! || left[1]! - right[1]! || left[2]! - right[2]!
+  if (versions.includes(range)) return range
+  const base = parse(range.replace(/^[\^~]/u, ''))
+  if (base === undefined || !/^[\^~]/u.test(range)) return undefined
+  const upper = range.startsWith('~') ? [base[0]!, base[1]! + 1, 0] : base[0] === 0 ? [0, base[1]! + 1, 0] : [base[0]! + 1, 0, 0]
+  return versions
+    .map(version => ({ version, parsed: parse(version) }))
+    .filter((candidate): candidate is { version: string; parsed: number[] } =>
+      candidate.parsed !== undefined && compare(candidate.parsed, base) >= 0 && compare(candidate.parsed, upper) < 0)
+    .sort((left, right) => compare(right.parsed, left.parsed))[0]?.version
+}
+
 async function main(): Promise<void> {
   try {
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:reset', async () => {
@@ -132,6 +277,10 @@ async function main(): Promise<void> {
       readDesktopCorePackageSet(BUILD_ROOT, release.version),
     )
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:install', () => runPnpm(['install', '--prod', '--frozen-lockfile', '--trust-lockfile']))
+    if (TARGET_PLATFORM === 'linux') {
+      // Native sharp deterministically segfaults on decode under Electron on Linux; ship the WASM backend instead.
+      await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:sharp-wasm', () => installSharpWasmBackend())
+    }
     const packageSet = readDesktopCorePackageSet(BUILD_ROOT, release.version)
     const targetName = resolveDesktopBuildTarget()
     const target = { platform: process.platform, arch: desktopTargetPlatform(targetName).arch }
@@ -145,6 +294,7 @@ async function main(): Promise<void> {
         filter: source => desktopRuntimeFileExclusion(relative(modules, source), target, officeEngine) === undefined,
       })
     })
+    await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:libreoffice-asar-probe', async () => patchLibreOfficeAsarProbe())
     writeFileSync(join(DSH_OUTPUT_ROOT, 'package.json'), `${JSON.stringify({
       name: '@deepseek-ai/dsh-desktop-runtime', private: true, version: release.version, type: 'module',
       dependencies: Object.fromEntries(packageSet.packages.map(entry => [entry.name, entry.version])),
@@ -171,7 +321,7 @@ async function main(): Promise<void> {
       await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-after-smoke', () => verifyDesktopRuntime(DSH_OUTPUT_ROOT, release.version, target))
     }
   } catch (error) {
-    rmSync(DSH_OUTPUT_ROOT, { recursive: true, force: true })
+    if (process.env.DSH_DESKTOP_KEEP_FAILED_OUTPUT === undefined) rmSync(DSH_OUTPUT_ROOT, { recursive: true, force: true })
     throw error
   } finally {
     let cleaned = false

@@ -27,7 +27,7 @@ async function prepareElectron({ platform, arch }: DesktopTarget): Promise<strin
     () => downloadArtifact({ version, platform, arch, artifactName: 'electron', cacheRoot: BUILD_PATHS.downloads }))
   rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
-  const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+  const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : platform === 'linux' ? 'electron' : 'Electron.app/Contents/MacOS/Electron')
   return execFileSync(executable, ['-p', 'process.versions.node'], {
     encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
   }).trim()

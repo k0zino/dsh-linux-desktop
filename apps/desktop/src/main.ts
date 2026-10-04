@@ -212,6 +212,10 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
     minWidth: 520,
     minHeight: 600,
     show,
+    // X11 window managers read the window icon; Wayland associates it through the desktop entry.
+    ...(process.platform === 'linux' ? {
+      icon: join(app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'), 'icon.png'),
+    } : {}),
     ...(process.platform === 'win32' && primary ? {
       titleBarStyle: 'hidden' as const,
       titleBarOverlay: { height: WINDOWS_TITLEBAR_HEIGHT, color: chromeFallbackFill(),

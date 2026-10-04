@@ -18,6 +18,8 @@ const SHARED_SETTING = /^(?:DSH_DESKTOP_(?:APP_ID|AUTO_UPDATE_ENV|NPM_REGISTRY|M
 const WINDOWS_SETTING = /^DSH_DESKTOP_WINDOWS_(?:CER_FILE|SIGNTOOL|KEY_CONTAINER|TOKEN_PIN|SIGNATURE_CACHE_DIR|SIGNATURE_CACHE_CONCURRENCY)$/u
 const MACOS_SETTING = /^(?:DSH_DESKTOP_MACOS_(?:SIGNING_IDENTITY|TEAM_ID|SIGNATURE_CACHE_DIR|PACK_CONCURRENCY|DOWNLOAD_PROXY|NOTARIZATION_PROXY)|APPLE_(?:API_KEY|API_KEY_ID|API_ISSUER|ID|APP_SPECIFIC_PASSWORD|TEAM_ID|KEYCHAIN|KEYCHAIN_PROFILE)|CSC_(?:LINK|KEY_PASSWORD))$/u
 const AMBIENT_RELEASE_SETTING = /^(?:DSH_DESKTOP_(?:APP_ID|AUTO_UPDATE_ENV|MANDATORY_UPDATE_.*|WINDOWS_.*|MACOS_.*)|APPLE_.*|(?:WIN_)?CSC_.*|DOWNLOAD_(?:TEST|PROD)_.*)$/iu
+/** Linux packaging accepts the shared settings only. */
+const LINUX_SETTING = /$.^/u
 const FILE_SETTINGS = ['DSH_DESKTOP_WINDOWS_CER_FILE', 'DSH_DESKTOP_WINDOWS_SIGNTOOL', 'APPLE_API_KEY', 'APPLE_KEYCHAIN', 'CSC_LINK']
 
 /**
@@ -36,7 +38,7 @@ export function localMacOSPackageEnvironment(environment = process.env) {
 /**
  * Read a machine preset when selected, otherwise the target's required dotenv; no ambient release fallback.
  * PACKAGE_TEST_RELEASE_ID overrides the test preset only; blank retains its configured ID.
- * @param {'win32' | 'darwin'} platform Target platform.
+ * @param {'win32' | 'darwin' | 'linux'} platform Target platform.
  * @param {NodeJS.ProcessEnv} environment Parent environment, retained only for unrelated build tools.
  * @param {string} appRoot Desktop application directory; relative credential paths resolve here.
  * @param {{ unsigned?: boolean, prepareOnly?: boolean }} options Unsigned presets and Windows preparation-only presets never read signing credentials.
@@ -44,23 +46,25 @@ export function localMacOSPackageEnvironment(environment = process.env) {
  */
 export function loadDesktopPackageEnvironment(platform, environment = process.env, appRoot = APP_ROOT, options = {}) {
   const preset = environment.DSH_PACKAGING_PRESET
-  let path = join(appRoot, platform === 'win32' ? '.env.windows' : '.env.macos')
+  let path = join(appRoot, platform === 'win32' ? '.env.windows' : platform === 'linux' ? '.env.linux' : '.env.macos')
   if (preset !== undefined) {
     if (preset !== 'test' && preset !== 'production') throw new Error('desktop package: preset must be test or production')
     const root = environment.DSH_PACKAGING_CONFIG_DIR
     if (!root || !isAbsolute(root)) throw new Error('desktop package: DSH_PACKAGING_CONFIG_DIR must be an absolute directory')
     path = join(root, 'presets', `${preset}.env`)
   }
-  const platformSetting = platform === 'win32' ? WINDOWS_SETTING : MACOS_SETTING
+  const platformSetting = platform === 'win32' ? WINDOWS_SETTING : platform === 'darwin' ? MACOS_SETTING : LINUX_SETTING
   const publicPlatformSetting = platform === 'win32'
     ? /^DSH_DESKTOP_WINDOWS_SIGNATURE_CACHE_(?:DIR|CONCURRENCY)$/u
-    : /^DSH_DESKTOP_MACOS_(?:SIGNATURE_CACHE_DIR|PACK_CONCURRENCY|DOWNLOAD_PROXY|NOTARIZATION_PROXY)$/u
+    : platform === 'darwin'
+      ? /^DSH_DESKTOP_MACOS_(?:SIGNATURE_CACHE_DIR|PACK_CONCURRENCY|DOWNLOAD_PROXY|NOTARIZATION_PROXY)$/u
+      : LINUX_SETTING
   const settings = readSettings(path, name => preset === undefined
     ? SHARED_SETTING.test(name) || platformSetting.test(name)
     : /^(?:DSH_DESKTOP_(?:APP_ID|AUTO_UPDATE_ENV|NPM_REGISTRY|MANDATORY_UPDATE_(?:CONFIG|(?:TEST|PROD)_ORIGIN))|DOWNLOAD_TEST_(?:ORIGIN|RELEASE_ID))$/u.test(name) || publicPlatformSetting.test(name))
   if (preset !== undefined) {
     if (settings.DSH_DESKTOP_AUTO_UPDATE_ENV !== preset) throw new Error('desktop package: preset deployment must match its name')
-    if (!options.unsigned && (platform === 'darwin' || !options.prepareOnly)) {
+    if (platform !== 'linux' && !options.unsigned && (platform === 'darwin' || !options.prepareOnly)) {
       const filename = platform === 'win32' ? 'windows-signing.env' : 'macos-signing.env'
       Object.assign(settings, readSettings(join(dirname(dirname(path)), 'secrets', filename),
         name => platform === 'win32'
@@ -129,13 +133,15 @@ function requireReadableFile(environment, name) {
 /**
  * Validate the packaging mode before preparation without invoking a token or Apple's services.
  * @param {NodeJS.ProcessEnv} environment Selected local defaults or file-owned release settings.
- * @param {{ platform: 'win32' | 'darwin', arch: string }} target Selected release target.
+ * @param {{ platform: 'win32' | 'darwin' | 'linux', arch: string }} target Selected release target.
  * @param {{ unsigned?: boolean, prepareOnly?: boolean, skipNotarization?: boolean }} options Explicit packaging mode.
  * @returns {void}
  */
 export function validateDesktopPackageEnvironment(environment, target, options = {}) {
   resolveDesktopAppId(environment)
   resolveNpmRegistry(environment)
+  // Linux builds are local-only: no mandatory-update policy, signing, or updater feed is configured.
+  if (target.platform === 'linux') return
   if (target.platform !== 'darwin' || !options.unsigned) resolveDesktopPolicyEnvironment(environment)
   if (target.platform === 'darwin') resolveMacOSPackageSettings(environment)
   else resolveWindowsPackageSettings(environment)
