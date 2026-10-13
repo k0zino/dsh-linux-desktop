@@ -53,7 +53,7 @@ export class DesktopPlatformView {
    * @param platform - operating system this shell runs on, reported to Platform.
    */
   constructor(private readonly preload: string, private readonly getLocale: () => PlatformLocale,
-    private readonly platform: 'darwin' | 'win32') {}
+    private readonly platform: 'darwin' | 'win32' | 'linux') {}
 
   /** @param next - private Host credentials; identity enrichment preserves an already open temporary document. */
   setSession(next: PlatformSession | null): void {

@@ -120,7 +120,7 @@
     - id: deepseek-account
       name: '@deepseek-ai/dsh-deepseek-account-platform'
       config:
-        desktopPlatform: !!js "ctx.get('profileContext')?.name === 'desktop' && ['darwin', 'win32'].includes(process.platform) ? process.platform : null"
+        desktopPlatform: !!js "ctx.get('profileContext')?.name === 'desktop' && ['darwin', 'win32', 'linux'].includes(process.platform) ? process.platform : null"
 
     - id: credentials
       name: '@deepseek-ai/dsh-credentials-local'

@@ -24,7 +24,7 @@ export interface Config {
   /** Platform origin serving auth-api and browser pages. */
   platformOrigin?: string
   /** Native desktop identity for Host API and embedded Platform requests; null identifies the client as web. */
-  desktopPlatform?: 'darwin' | 'win32' | null
+  desktopPlatform?: 'darwin' | 'win32' | 'linux' | null
   /** Optional frontend deployment selector for embedded Usage and Top-up pages. */
   embeddedPageDist?: string
   /** Exact HTTP(S) origin allowed to receive account tokens for inference and files. */
@@ -51,7 +51,7 @@ export interface Config {
 /** Validated deployment choices. */
 export const Config = Schema.object({
   platformOrigin: Schema.string().default('https://platform.deepseek.com'),
-  desktopPlatform: Schema.union([Schema.const('darwin'), Schema.const('win32'), Schema.const(null)]).default(null),
+  desktopPlatform: Schema.union([Schema.const('darwin'), Schema.const('win32'), Schema.const('linux'), Schema.const(null)]).default(null),
   embeddedPageDist: Schema.string().default(''),
   inferenceOrigin: Schema.string().default('https://api.deepseek.com'),
   allowLoopbackHttp: Schema.boolean().default(false),
@@ -88,7 +88,7 @@ export class PlatformAccount extends DeepSeekAccount {
   private readonly embeddedPageDist: string
   private readonly inferenceOrigin: string
   private readonly rewriteBrowserOrigin: boolean
-  private readonly platform: 'darwin' | 'win32' | null
+  private readonly platform: 'darwin' | 'win32' | 'linux' | null
   private readonly requestHeaders: Record<string, string>
   private readonly accountRequestHeaders: Record<string, string>
   private readonly requestTimeout: number
