@@ -89,4 +89,22 @@ describe('desktop build version discovery', () => {
     await expect(suggestDesktopBuildVersion({ productVersion: PRERELEASE, target: 'win-x64', environment: {}, date: DATE, artifactsRoot }))
       .resolves.toBe(`${PRERELEASE}.${DATE}.3`)
   })
+
+  it('reads Linux artifact names too', async () => {
+    const artifactsRoot = await artifactsWith([
+      `deepseek-harness-${PRERELEASE}.${DATE}.3-linux-x64.AppImage`,
+      `deepseek-harness-${PRERELEASE}.${DATE}.3-linux-x64.deb`,
+      `deepseek-harness-${PRERELEASE}.${DATE}.3-linux-x64.pacman`,
+    ])
+    await expect(suggestDesktopBuildVersion({ productVersion: PRERELEASE, target: 'linux-x64', environment: {}, date: DATE, artifactsRoot }))
+      .resolves.toBe(`${PRERELEASE}.${DATE}.4`)
+  })
+
+  it('numbers local Linux builds without querying an update bucket', async () => {
+    const artifactsRoot = await artifactsWith([`deepseek-harness-${PRERELEASE}.${DATE}.6-linux-x64.rpm`])
+    await expect(suggestDesktopBuildVersion({
+      productVersion: PRERELEASE, target: 'linux-x64', date: DATE, artifactsRoot,
+      environment: { DOWNLOAD_TEST_ORIGIN: 'https://desktop-updates.example.com' },
+    })).resolves.toBe(`${PRERELEASE}.${DATE}.7`)
+  })
 })
