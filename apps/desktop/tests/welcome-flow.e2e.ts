@@ -30,7 +30,8 @@ async function mockPlatform() {
   const server = createServer((req, res) => {
     // The real Host composition identifies every Platform request with the five client headers.
     const expected = {
-      'x-client-bundle-id': '', 'x-client-platform': process.platform === 'win32' ? 'desktop-win' : 'desktop-mac',
+      'x-client-bundle-id': '',
+      'x-client-platform': process.platform === 'win32' ? 'desktop-win' : process.platform === 'linux' ? 'desktop-linux' : 'desktop-mac',
       'x-client-version': '1.2.3', 'x-client-locale': 'en_US',
       'x-client-timezone-offset': String(-new Date().getTimezoneOffset() * 60),
     }
@@ -121,7 +122,7 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
         dsh: project,
       })
       await manager.applyRelease()
-      writeFileSync(join(paths.profile, 'cordis.patch.yml'), `- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n- id: deepseek-account\n  config:\n${process.platform === 'linux' ? '    desktopPlatform: darwin\n' : ''}    platformOrigin: ${platform.origin}\n    allowLoopbackHttp: true\n    requestHeaders:\n      Cookie: test_gate=synthetic\n`)
+      writeFileSync(join(paths.profile, 'cordis.patch.yml'), `- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n- id: deepseek-account\n  config:\n    platformOrigin: ${platform.origin}\n    allowLoopbackHttp: true\n    requestHeaders:\n      Cookie: test_gate=synthetic\n`)
       let backend: DesktopWelcomeBackend
       let hostOrigin = ''
       const restart = async (): Promise<void> => {
