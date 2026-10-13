@@ -30,8 +30,10 @@ const LISTING_DEADLINE_MS = 8_000
 /** Objects one listing page may return. */
 const LISTING_PAGE_SIZE = 1000
 
-/** Artifact name electron-builder writes for one build, on either platform; unsigned and unnotarized builds add a suffix. */
-const ARTIFACT = /(?:^|\/)deepseek-harness-(?<version>.+)-(?:mac|win)-(?:arm64|x64)(?:-unsigned|-unnotarized)?\.(?:exe|dmg|zip)$/u
+/** Artifact name electron-builder writes for one build, on any platform; unsigned and unnotarized builds add a suffix. */
+const ARTIFACT = new RegExp(
+  String.raw`(?:^|/)deepseek-harness-(?<version>.+)-(?:mac|win|linux)-(?:arm64|x64)(?:-unsigned|-unnotarized)?`
+  + String.raw`\.(?:exe|dmg|zip|AppImage|deb|rpm|pacman)$`, 'u')
 
 /** Inputs that decide which versions are already taken. */
 export interface DesktopBuildVersionSuggestionOptions {
@@ -87,6 +89,8 @@ async function localVersions(artifactsRoot: string): Promise<string[]> {
  * @returns Versions parsed from object names, or undefined when the bucket cannot be listed completely in time.
  */
 async function remoteVersions(options: DesktopBuildVersionSuggestionOptions): Promise<string[] | undefined> {
+  // Linux builds are local-only and never publish an update bucket to number against.
+  if (options.target === 'linux-x64') return undefined
   const platform = options.target === 'win-x64' ? 'win32' as const : 'darwin' as const
   const arch = options.target === 'mac-arm64' ? 'arm64' : 'x64'
   // An unconfigured destination has nothing to be unique against; an invalid one must not be mistaken for it.
