@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { platformClientHeaders } from '../src/index.ts'
 
 it.each([
-  ['darwin', 'desktop-mac'], ['win32', 'desktop-win'], [null, 'web'],
+  ['darwin', 'desktop-mac'], ['win32', 'desktop-win'], ['linux', 'desktop-linux'], [null, 'web'],
 ] as const)('maps %s to %s and leaves the bundle ID empty', (platform, expected) => {
   expect(platformClientHeaders(platform, { version: '1.2.3', locale: 'zh-CN', timezoneOffsetSeconds: 28_800 })).toEqual({
     'x-client-bundle-id': '', 'x-client-platform': expected, 'x-client-version': '1.2.3',

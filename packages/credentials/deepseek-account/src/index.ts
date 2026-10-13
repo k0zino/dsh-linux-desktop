@@ -140,9 +140,9 @@ export function mergePlatformCookies(base: string, override: string): string {
  * @param platform - Operating system supplied by the desktop composition.
  * @returns Platform request headers shared by account and update-policy clients.
  */
-export function desktopClientHeaders(platform: 'darwin' | 'win32' | null): Record<string, string> {
+export function desktopClientHeaders(platform: 'darwin' | 'win32' | 'linux' | null): Record<string, string> {
   if (platform === null) return {}
-  return { 'x-client-platform': platform === 'win32' ? 'desktop-win' : 'desktop-mac' }
+  return { 'x-client-platform': platform === 'win32' ? 'desktop-win' : platform === 'linux' ? 'desktop-linux' : 'desktop-mac' }
 }
 
 /**
@@ -151,7 +151,7 @@ export function desktopClientHeaders(platform: 'darwin' | 'win32' | null): Recor
  * @param client - identity of the requesting UI for this call.
  * @returns the five client headers; the bundle ID is intentionally empty.
  */
-export function platformClientHeaders(platform: 'darwin' | 'win32' | null, client: AccountClientMetadata): Record<string, string> {
+export function platformClientHeaders(platform: 'darwin' | 'win32' | 'linux' | null, client: AccountClientMetadata): Record<string, string> {
   return {
     'x-client-bundle-id': '',
     'x-client-platform': 'web',
