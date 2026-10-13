@@ -22,8 +22,10 @@
 环境要求：
 
 - Linux x86_64,Node `^22.19 || >=24`,pnpm(corepack 自带）
-- 打 `.rpm` 需要 `rpmbuild`。Arch 系发行版自带 `rpm-tools`;Debian 系为 `rpm` 包；没有 root 权限时可以解包发行版仓库的 `rpm-tools` 到用户目录，再通过 `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` 指向它
-- 其余打包工具（dpkg 以外的一切）由 electron-builder 内置，无需系统安装
+- 打 `.rpm` 需要 `rpmbuild`。Arch 系发行版自带 `rpm-tools`;Debian 系为 `rpm` 包；没有 root 权限时可以解包发行版仓库的 `rpm`/`librpm*`/`debugedit` 等到用户目录，再通过 `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` 指向它
+- 打 `.pacman` 需要 `bsdtar`(Debian 系为 `libarchive-tools` 包，同样可以解包到用户目录）
+- 打 `.deb` 需要系统的 `dpkg`；其余打包工具由 electron-builder 内置，无需系统安装
+- 本机构网受限时，Electron 可用 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`;Node/Python 运行时与 Python wheel 偶发拉取失败时，可按 `scripts/primary-runtime/lock.json` 的 sha256 预先下载到 `apps/desktop/.desktop-build/downloads/<sha256>` 复用
 
 步骤：
 
