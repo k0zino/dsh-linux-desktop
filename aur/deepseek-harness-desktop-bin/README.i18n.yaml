@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write aur/deepseek-harness-desktop-bin/README.md
+/aur-packaging-deepseek-harness-desktop-bin:
+  en: 0e26737769dae5f3
+  zh: 15906cf0a969140a
+/aur-packaging-deepseek-harness-desktop-bin/local-installation-without-the-aur:
+  en: 02198cf3d5f5fc43
+  zh: 1dfc4eb0c1118a06
+/aur-packaging-deepseek-harness-desktop-bin/status-of-publishing-to-the-aur:
+  en: 5c6f552bacfaec0c
+  zh: 3598d76faa48c517
