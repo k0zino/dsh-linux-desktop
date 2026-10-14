@@ -53,7 +53,7 @@ pnpm --dir apps/desktop run package:linux:x64
 3. **ASAR 探针修复**(`prepare-dsh.ts` 的 `patchLibreOfficeAsarProbe`):Electron 的 asar 补丁使 `lstatSync(p, { throwIfNoEntry: false })` 对归档内缺失路径返回 `null` 而非 `undefined`，导致 `@deepseek-ai/libreoffice-kit` 把"Linux 原生引擎未安装"误判为"引擎包损坏"而无法回退 WASM 引擎。物化时把探针改写为 `Boolean(lstatSync(...))`。
 4. **NODE_PATH 泄漏修复**(`smoke-prepared-runtime.ts`)：清掉 tsx 注入的 `NODE_PATH`，避免冒烟进程从构建仓库捞到原生模块（这个修复对 macOS/Windows 同样成立）。
 5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
-6. **客户端身份上报修复**:`x-client-platform` 请求头此前把 Linux 桌面端误报为 `desktop-mac`(Host 侧则退化为 `web`)；现在 `deepseek-account` 的头部映射、`deepseek-account-platform` 的 `desktopPlatform` 配置、基座 `cordis.patch.yml` 与桌面主进程均识别 `linux`，上报为 `desktop-linux`。
+6. **客户端身份上报约束**:DeepSeek 平台后端校验 `x-client-platform` 请求头白名单，不接受 `desktop-linux`，否则登录在 `auth_exchange` 被 422 拒绝；因此 Linux 端沿用上游取值（Host 侧 `web`、内嵌页面 `desktop-mac`)，不做改动。
 7. **构建版本号发现修复**(`desktop-build-version-discovery.ts`):`--build-version auto` 的本地序号扫描此前只认 mac/win 产物名（`.exe/.dmg/.zip`),Linux 产物（`.AppImage/.deb/.rpm/.pacman`）会被漏算而重发同一序号；同时 Linux 目标不再误查 macOS 更新桶。
 
 ## 已知限制
