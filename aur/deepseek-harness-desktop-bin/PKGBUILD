@@ -4,8 +4,8 @@
 # integration that unpatched upstream builds lack.
 
 pkgname=deepseek-harness-desktop-bin
-_pkgver=0.2.0-rc.2
-_tag="v${_pkgver}-linux.1"
+_pkgver=0.2.1-alpha.2
+_tag="v${_pkgver}-linux.2"
 pkgver=${_pkgver//-/}
 pkgrel=1
 pkgdesc='Desktop shell for the DeepSeek Harness agent runtime (fixed Linux x64 build)'
@@ -23,7 +23,7 @@ _pacman="deepseek-harness-${_pkgver}-linux-x64.pacman"
 source=("${_pacman}::${url}/releases/download/${_tag}/${_pacman}"
         "LICENSE::https://raw.githubusercontent.com/k0zino/dsh-linux-desktop/master/LICENSE")
 noextract=("${_pacman}")
-sha256sums=('452accea4c6e50c88ad49817c2825c870399cbe29cb1ec4e9166cdeb4a860874'
+sha256sums=('5abbbce1bc2e7be74aeacd67ecc09f573589fa176a103253ff96f6ddf8b99125'
             'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
 
 package() {
