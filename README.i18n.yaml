@@ -2,33 +2,21 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
-/deepseek-harness:
-  en: f68c4f080ce55ff2
-  zh: 88a76d7f7f0b260e
-/deepseek-harness/developer-preview:
-  en: 4ef4d8a71ac143f0
-  zh: 1bfc3149ba8e5543
-/deepseek-harness/run:
-  en: 4e0248e4c6474fc6
-  zh: eb2fb8d78c7d6bc0
-/deepseek-harness/run/run-from-npm:
-  en: e22005cd42e6cbad
-  zh: 0f536f4208df1d60
-/deepseek-harness/run/run-from-source:
-  en: 819e3f7c144d0d64
-  zh: de815f040975dba7
-/deepseek-harness/community-and-support:
-  en: 20acf6451fdc869b
-  zh: d06246dd019ecef7
-/deepseek-harness/contributing:
-  en: cabc2d3e9f8898bd
-  zh: 83b6d238bae29ce3
-/deepseek-harness/development:
-  en: 803ca2b11b497bed
-  zh: 8b4071eb0e7783ef
-/deepseek-harness/citation:
-  en: 6704e9e5a8d49a91
-  zh: 85c9cdd8d56f8e9d
-/deepseek-harness/license:
-  en: 926995344fc1c72b
-  zh: c92fab5abf85932f
+/dsh-linux-desktop:
+  en: 138b391b71227cdf
+  zh: f132c03f34127636
+/dsh-linux-desktop/installation:
+  en: 02a708d9dcc4fa0b
+  zh: 23efd20b4ab4a681
+/dsh-linux-desktop/build-from-source:
+  en: 4920b638744dcd65
+  zh: d6caeeecf9a67d2b
+/dsh-linux-desktop/changes-relative-to-upstream:
+  en: f631951b7f4a5932
+  zh: 69d74094602644df
+/dsh-linux-desktop/known-limitations:
+  en: 183d3f4a14d88401
+  zh: b1822ab0a51e6374
+/dsh-linux-desktop/license:
+  en: 4b93fa0f6d2843e0
+  zh: ce6d01e784ca997b

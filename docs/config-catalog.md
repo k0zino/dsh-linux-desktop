@@ -804,7 +804,7 @@ export interface Config {
   /** Platform origin serving auth-api and browser pages. */
   platformOrigin?: string
   /** Native desktop identity for Host API and embedded Platform requests; null identifies the client as web. */
-  desktopPlatform?: 'darwin' | 'win32' | null
+  desktopPlatform?: 'darwin' | 'win32' | 'linux' | null
   /** Optional frontend deployment selector for embedded Usage and Top-up pages. */
   embeddedPageDist?: string
   /** Exact HTTP(S) origin allowed to receive account tokens for inference and files. */

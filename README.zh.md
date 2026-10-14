@@ -1,96 +1,67 @@
-# DeepSeek Harness
+# dsh-linux-desktop
 
 [English](README.md) | 中文
 
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 桌面版的社区 Linux 移植。官方桌面安装包只支持 macOS 和 Windows，本仓库在上游源码（MIT 协议）基础上补齐了 **Linux x86_64** 的完整打包链路，可产出 **deb / rpm / pacman / AppImage** 四种安装包。
 
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
+## 安装
 
-文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+在 [Releases](https://github.com/k0zino/dsh-linux-desktop/releases) 或本地构建产物中选择对应格式：
 
-## 开发者预览
+| 格式 | 适用发行版 | 安装命令 |
+| --- | --- | --- |
+| `.deb` | Debian / Ubuntu / Deepin 等 | `sudo apt install ./deepseek-harness-*-linux-amd64.deb` |
+| `.rpm` | Fedora / RHEL / openSUSE 等 | `sudo dnf install ./deepseek-harness-*-linux-x86_64.rpm` |
+| `.pacman` | Arch / Manjaro / CachyOS 等 | `sudo pacman -U deepseek-harness-*-linux-x64.pacman` |
+| `.AppImage` | 通用，免安装 | `chmod +x deepseek-harness-*.AppImage && ./deepseek-harness-*.AppImage` |
 
-DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+安装后应用名为 **DeepSeek Harness**，桌面环境中可直接从启动器打开（含完整的多尺寸图标）。
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+## 从源码构建
 
-<a id="run"></a>
+环境要求：
 
-## 运行
+- Linux x86_64,Node `^22.19 || >=24`,pnpm(corepack 自带）
+- 打 `.rpm` 需要 `rpmbuild`。Arch 系发行版自带 `rpm-tools`;Debian 系为 `rpm` 包；没有 root 权限时可以解包发行版仓库的 `rpm`/`librpm*`/`debugedit` 等到用户目录，再通过 `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` 指向它
+- 打 `.pacman` 需要 `bsdtar`(Debian 系为 `libarchive-tools` 包，同样可以解包到用户目录）
+- 打 `.deb` 需要系统的 `dpkg`；其余打包工具由 electron-builder 内置，无需系统安装
+- 本机构网受限时，Electron 可用 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`;Node/Python 运行时与 Python wheel 偶发拉取失败时，可按 `scripts/primary-runtime/lock.json` 的 sha256 预先下载到 `apps/desktop/.desktop-build/downloads/<sha256>` 复用
 
-### 通过 `npm` 运行
+步骤：
 
-安装 `Node.js`，然后运行：
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
-
-<a id="run-from-source"></a>
-
-### 从源码运行
-
-如需从仓库源码运行：
-
-```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
+```bash
+git clone https://github.com/k0zino/dsh-linux-desktop.git
+cd dsh-linux-desktop
 pnpm install
-pnpm run build
-pnpm dsh web
+
+# 打包配置：创建 apps/desktop/.env.linux，内容如下
+#   DSH_DESKTOP_APP_ID=com.deepseek.harness
+#   # 可选：npm 镜像，加速内嵌运行时安装
+#   # DSH_DESKTOP_NPM_REGISTRY=https://registry.npmmirror.com
+
+pnpm --dir apps/desktop run package:linux:x64
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+产物在 `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`，同目录的 `linux-unpacked/` 是可直接运行的免安装版。完整构建约 5~10 分钟，包含打包后的真实冒烟测试（启动 Host、加载前端、DOCX/XLSX/PPTX 转 PDF)。
 
-## 社区与支持
+## 相对上游的改动
 
-- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群！扫描下方二维码填写入群问卷，小助手会定期发送入群邀请。
+全部改动集中在 `apps/desktop/`，与上游 master 保持线性 diff，便于 rebase:
 
-<table>
-  <thead>
-    <tr>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
+1. **linux-x64 目标全链路**:`desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` 等注册 linux 目标、四种打包格式与本地专用（无签名、无自动更新）的发布策略。
+2. **sharp 换 WASM 后端**(`prepare-dsh.ts` 的 `installSharpWasmBackend`)：原生 sharp 在 Electron on Linux 下解码即段错误，打包时从 registry 暂存 `@img/sharp-wasm32` 并移除原生二进制。
+3. **ASAR 探针修复**(`prepare-dsh.ts` 的 `patchLibreOfficeAsarProbe`):Electron 的 asar 补丁使 `lstatSync(p, { throwIfNoEntry: false })` 对归档内缺失路径返回 `null` 而非 `undefined`，导致 `@deepseek-ai/libreoffice-kit` 把"Linux 原生引擎未安装"误判为"引擎包损坏"而无法回退 WASM 引擎。物化时把探针改写为 `Boolean(lstatSync(...))`。
+4. **NODE_PATH 泄漏修复**(`smoke-prepared-runtime.ts`)：清掉 tsx 注入的 `NODE_PATH`，避免冒烟进程从构建仓库捞到原生模块（这个修复对 macOS/Windows 同样成立）。
+5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
+6. **客户端身份上报修复**:`x-client-platform` 请求头此前把 Linux 桌面端误报为 `desktop-mac`(Host 侧则退化为 `web`)；现在 `deepseek-account` 的头部映射、`deepseek-account-platform` 的 `desktopPlatform` 配置、基座 `cordis.patch.yml` 与桌面主进程均识别 `linux`，上报为 `desktop-linux`。
+7. **构建版本号发现修复**(`desktop-build-version-discovery.ts`):`--build-version auto` 的本地序号扫描此前只认 mac/win 产物名（`.exe/.dmg/.zip`),Linux 产物（`.AppImage/.deb/.rpm/.pacman`）会被漏算而重发同一序号；同时 Linux 目标不再误查 macOS 更新桶。
 
-## 参与贡献
+## 已知限制
 
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
+- 仅 `linux-x64`;ARM64 Linux 未做（上游引擎包和 Electron 目标都需额外适配）。
+- Linux 构建为本地构建：不做代码签名，不含自动更新 feed。
+- 仅测试于 glibc 发行版；musl(Alpine 等）未覆盖。
 
-## 开发
+## 协议
 
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
-
-`pnpm run dev:web` 会在一个终端里完成构建、启动，并在源码修改时重建 client bundle；`make help` 列出 Web 与 Desktop 对应的 Make target。完整表格见开发指南的「应用命令」一节。
-
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
-
-## 引用
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
-
-## 许可证
-
-[MIT](LICENSE)
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+与上游一致：[MIT](LICENSE)。上游项目版权归 DeepSeek AI 所有。

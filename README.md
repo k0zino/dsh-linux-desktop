@@ -1,33 +1,33 @@
 # dsh-linux-desktop
 
-[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 桌面版的社区 Linux 移植。官方桌面安装包只支持 macOS 和 Windows，本仓库在上游源码（MIT 协议）基础上补齐了 **Linux x86_64** 的完整打包链路，可产出 **deb / rpm / pacman / AppImage** 四种安装包。
+English | [中文](README.zh.md)
 
-> English: A community Linux port of the DeepSeek Harness desktop app. The upstream desktop packaging only targets macOS and Windows; this repo adds a complete `linux-x64` packaging pipeline that produces **deb, rpm, pacman, and AppImage** artifacts, plus the fixes needed to make the packaged app actually run (WASM sharp backend, an ASAR `lstatSync` probe fix for the LibreOffice engine fallback, and a proper icon set with desktop-entry association). See [Build from source](#从源码构建) below. Not affiliated with DeepSeek; upstream is MIT licensed.
+A community Linux port of the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) desktop app. The upstream desktop packaging only targets macOS and Windows; this repo builds on the upstream sources (MIT license) and adds a complete **Linux x86_64** packaging pipeline that produces **deb / rpm / pacman / AppImage** artifacts.
 
-## 安装
+## Installation
 
-在 [Releases](../../releases) 或本地构建产物中选择对应格式：
+Pick a format from the [Releases](https://github.com/k0zino/dsh-linux-desktop/releases) page or a local build:
 
-| 格式 | 适用发行版 | 安装命令 |
+| Format | Distributions | Install command |
 | --- | --- | --- |
-| `.deb` | Debian / Ubuntu / Deepin 等 | `sudo apt install ./deepseek-harness-*-linux-amd64.deb` |
-| `.rpm` | Fedora / RHEL / openSUSE 等 | `sudo dnf install ./deepseek-harness-*-linux-x86_64.rpm` |
-| `.pacman` | Arch / Manjaro / CachyOS 等 | `sudo pacman -U deepseek-harness-*-linux-x64.pacman` |
-| `.AppImage` | 通用，免安装 | `chmod +x deepseek-harness-*.AppImage && ./deepseek-harness-*.AppImage` |
+| `.deb` | Debian / Ubuntu / Deepin etc. | `sudo apt install ./deepseek-harness-*-linux-amd64.deb` |
+| `.rpm` | Fedora / RHEL / openSUSE etc. | `sudo dnf install ./deepseek-harness-*-linux-x86_64.rpm` |
+| `.pacman` | Arch / Manjaro / CachyOS etc. | `sudo pacman -U deepseek-harness-*-linux-x64.pacman` |
+| `.AppImage` | Universal, no install | `chmod +x deepseek-harness-*.AppImage && ./deepseek-harness-*.AppImage` |
 
-安装后应用名为 **DeepSeek Harness**，桌面环境中可直接从启动器打开（含完整的多尺寸图标）。
+Once installed the app is named **DeepSeek Harness** and can be launched from the desktop environment's launcher (with a full multi-size icon set).
 
-## 从源码构建
+## Build from source
 
-环境要求：
+Requirements:
 
-- Linux x86_64,Node `^22.19 || >=24`,pnpm(corepack 自带）
-- 打 `.rpm` 需要 `rpmbuild`。Arch 系发行版自带 `rpm-tools`;Debian 系为 `rpm` 包；没有 root 权限时可以解包发行版仓库的 `rpm`/`librpm*`/`debugedit` 等到用户目录，再通过 `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` 指向它
-- 打 `.pacman` 需要 `bsdtar`(Debian 系为 `libarchive-tools` 包，同样可以解包到用户目录）
-- 打 `.deb` 需要系统的 `dpkg`；其余打包工具由 electron-builder 内置，无需系统安装
-- 本机构网受限时，Electron 可用 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`;Node/Python 运行时与 Python wheel 偶发拉取失败时，可按 `scripts/primary-runtime/lock.json` 的 sha256 预先下载到 `apps/desktop/.desktop-build/downloads/<sha256>` 复用
+- Linux x86_64, Node `^22.19 || >=24`, pnpm (bundled with corepack)
+- Building `.rpm` requires `rpmbuild`. Arch distributions ship `rpm-tools`; on Debian-based systems the package is `rpm`. Without root access you can unpack the distribution's `rpm`/`librpm*`/`debugedit` packages into a user directory and point `PATH` / `LD_LIBRARY_PATH` / `RPM_CONFIGDIR` at it
+- Building `.pacman` requires `bsdtar` (the `libarchive-tools` package on Debian-based systems, likewise unpackable into a user directory)
+- Building `.deb` requires the system `dpkg`; every other packaging tool is bundled with electron-builder and needs no system install
+- On a restricted network, Electron can use `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`; when the Node/Python runtime or Python wheel downloads fail intermittently, pre-download them by their sha256 from `scripts/primary-runtime/lock.json` into `apps/desktop/.desktop-build/downloads/<sha256>` for reuse
 
-步骤：
+Steps:
 
 ```bash
 git clone https://github.com/k0zino/dsh-linux-desktop.git
@@ -42,26 +42,26 @@ pnpm install
 pnpm --dir apps/desktop run package:linux:x64
 ```
 
-产物在 `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`，同目录的 `linux-unpacked/` 是可直接运行的免安装版。完整构建约 5~10 分钟，包含打包后的真实冒烟测试（启动 Host、加载前端、DOCX/XLSX/PPTX 转 PDF)。
+Artifacts land in `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`; the sibling `linux-unpacked/` is a directly runnable no-install build. A full build takes about 5~10 minutes and includes real smoke tests against the packaged tree (starting the Host, loading the frontend, converting DOCX/XLSX/PPTX to PDF).
 
-## 相对上游的改动
+## Changes relative to upstream
 
-全部改动集中在 `apps/desktop/`，与上游 master 保持线性 diff，便于 rebase:
+All changes live under `apps/desktop/` and stay a linear diff against upstream master, so rebasing is easy:
 
-1. **linux-x64 目标全链路**:`desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` 等注册 linux 目标、四种打包格式与本地专用（无签名、无自动更新）的发布策略。
-2. **sharp 换 WASM 后端**(`prepare-dsh.ts` 的 `installSharpWasmBackend`)：原生 sharp 在 Electron on Linux 下解码即段错误，打包时从 registry 暂存 `@img/sharp-wasm32` 并移除原生二进制。
-3. **ASAR 探针修复**(`prepare-dsh.ts` 的 `patchLibreOfficeAsarProbe`):Electron 的 asar 补丁使 `lstatSync(p, { throwIfNoEntry: false })` 对归档内缺失路径返回 `null` 而非 `undefined`，导致 `@deepseek-ai/libreoffice-kit` 把"Linux 原生引擎未安装"误判为"引擎包损坏"而无法回退 WASM 引擎。物化时把探针改写为 `Boolean(lstatSync(...))`。
-4. **NODE_PATH 泄漏修复**(`smoke-prepared-runtime.ts`)：清掉 tsx 注入的 `NODE_PATH`，避免冒烟进程从构建仓库捞到原生模块（这个修复对 macOS/Windows 同样成立）。
-5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
-6. **客户端身份上报修复**:`x-client-platform` 请求头此前把 Linux 桌面端误报为 `desktop-mac`(Host 侧则退化为 `web`)；现在 `deepseek-account` 的头部映射、`deepseek-account-platform` 的 `desktopPlatform` 配置、基座 `cordis.patch.yml` 与桌面主进程均识别 `linux`，上报为 `desktop-linux`。
-7. **构建版本号发现修复**(`desktop-build-version-discovery.ts`):`--build-version auto` 的本地序号扫描此前只认 mac/win 产物名（`.exe/.dmg/.zip`),Linux 产物（`.AppImage/.deb/.rpm/.pacman`）会被漏算而重发同一序号；同时 Linux 目标不再误查 macOS 更新桶。
+1. **The full linux-x64 target pipeline**: `desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` and friends register the linux target, the four packaging formats, and a local-only release policy (no signing, no auto-update).
+2. **sharp swapped for the WASM backend** (`installSharpWasmBackend` in `prepare-dsh.ts`): native sharp deterministically segfaults on decode under Electron on Linux, so packaging stages `@img/sharp-wasm32` from the registry and removes the native binaries.
+3. **ASAR probe fix** (`patchLibreOfficeAsarProbe` in `prepare-dsh.ts`): Electron's asar patch makes `lstatSync(p, { throwIfNoEntry: false })` return `null` instead of `undefined` for paths missing from the archive, so `@deepseek-ai/libreoffice-kit` misread "no native engine installed on Linux" as "corrupt engine package" and could not fall back to the WASM engine. Materialization rewrites the probe to `Boolean(lstatSync(...))`.
+4. **NODE_PATH leak fix** (`smoke-prepared-runtime.ts`): clears the `NODE_PATH` tsx injects, so the smoke process cannot pick up native modules from the build repository (this fix applies to macOS/Windows too).
+5. **Icons and desktop integration**: `resources/icons/` provides 16~1024 multi-size icons, and `desktopName` + `syncDesktopName` associate running windows with the .desktop entry; X11 additionally sets the runtime `BrowserWindow` icon.
+6. **Client identity reporting fix**: the `x-client-platform` request header previously misreported the Linux desktop client as `desktop-mac` (and the Host side degraded to `web`); now the header mapping in `deepseek-account`, the `desktopPlatform` config of `deepseek-account-platform`, the base `cordis.patch.yml`, and the desktop main process all recognize `linux` and report `desktop-linux`.
+7. **Build version discovery fix** (`desktop-build-version-discovery.ts`): the local index scan for `--build-version auto` previously only recognized mac/win artifact names (`.exe/.dmg/.zip`), so Linux artifacts (`.AppImage/.deb/.rpm/.pacman`) were miscounted and a taken index could be reissued; the Linux target also no longer queries the macOS update bucket by mistake.
 
-## 已知限制
+## Known limitations
 
-- 仅 `linux-x64`;ARM64 Linux 未做（上游引擎包和 Electron 目标都需额外适配）。
-- Linux 构建为本地构建：不做代码签名，不含自动更新 feed。
-- 仅测试于 glibc 发行版；musl(Alpine 等）未覆盖。
+- `linux-x64` only; ARM64 Linux is not done (both the upstream engine packages and the Electron targets need extra adaptation).
+- Linux builds are local: no code signing and no auto-update feed.
+- Tested only on glibc distributions; musl (Alpine etc.) is not covered.
 
-## 协议
+## License
 
-与上游一致：[MIT](LICENSE)。上游项目版权归 DeepSeek AI 所有。
+Same as upstream: [MIT](LICENSE). The upstream project is copyrighted by DeepSeek AI.

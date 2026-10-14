@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/guide/providers.md
 /configure-models:
-  en: b1631dcf25e805a1
-  zh: 8ded02e2ae87f00b
+  en: 2cf971a6258a1d10
+  zh: 050320ab4465c805
 /configure-models/configure-deepseek:
   en: 2c6b665adc256b4e
   zh: 2240e4c1573ebe9c
