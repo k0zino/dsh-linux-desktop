@@ -44,6 +44,8 @@ pnpm --dir apps/desktop run package:linux:x64
 
 产物在 `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`，同目录的 `linux-unpacked/` 是可直接运行的免安装版。完整构建约 5~10 分钟，包含打包后的真实冒烟测试（启动 Host、加载前端、DOCX/XLSX/PPTX 转 PDF)。
 
+请从纯 ASCII 路径运行打包产物。Electron 44.7 无法通过非 ASCII 绝对路径读取 ASAR，克隆在 `~/公共/` 这类目录下启动时会报 `Cannot find module .../app.asar/...`。冒烟测试会把构建复制到 ASCII 临时目录再跑，因此构建通过并不代表该克隆路径可用。运行前先把 `linux-unpacked/` 复制到 ASCII 路径，例如 `~/.local/opt/deepseek-harness`。
+
 ## 相对上游的改动
 
 全部改动集中在 `apps/desktop/`，与上游 master 保持线性 diff，便于 rebase:

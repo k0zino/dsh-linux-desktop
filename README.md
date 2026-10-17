@@ -44,6 +44,10 @@ pnpm --dir apps/desktop run package:linux:x64
 
 Artifacts land in `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`; the sibling `linux-unpacked/` is a directly runnable no-install build. A full build takes about 5~10 minutes and includes real smoke tests against the packaged tree (starting the Host, loading the frontend, converting DOCX/XLSX/PPTX to PDF).
 
+Run the packaged build from an ASCII-only path. Electron 44.7 cannot read ASAR archives through non-ASCII absolute paths, so a checkout below a directory such as `~/公共/` starts with `Cannot find module .../app.asar/...`. The smoke tests copy the build to an ASCII temporary directory, so a passing build does not prove the checkout path is usable. Copy `linux-unpacked/` to an ASCII path such as `~/.local/opt/deepseek-harness` before running it.
+
+Run the packaged build from an ASCII-only path: Electron 44.7 cannot read ASAR archives through non-ASCII absolute paths, so a checkout under a directory such as `~/公共/` starts with `Cannot find module .../app.asar/...`. The smoke tests avoid this by copying the build to an ASCII temporary directory, so a passing build does not prove the checkout path is usable. Copy `linux-unpacked/` to an ASCII path (for example `~/.local/opt/deepseek-harness`) before running it.
+
 ## Changes relative to upstream
 
 All changes live under `apps/desktop/` and stay a linear diff against upstream master, so rebasing is easy:
