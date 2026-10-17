@@ -307,9 +307,13 @@ function runPnpm(
   if (pnpmEntry === undefined || pnpmEntry === '') {
     throw new Error('desktop package: invoke this script through a pnpm package command')
   }
-  if (run !== undefined) return run.run(args.join(' '), process.execPath, [pnpmEntry, ...args], { cwd, env })
+  // pnpm ships either as a JavaScript entry point or, through @pnpm/exe, as a standalone
+  // executable. Node can only interpret the former, so an executable entry must be spawned directly.
+  const scriptEntry = /\.(?:c|m)?js$/u.test(pnpmEntry)
+  const [executable, entryArguments] = scriptEntry ? [process.execPath, [pnpmEntry]] : [pnpmEntry, []]
+  if (run !== undefined) return run.run(args.join(' '), executable, [...entryArguments, ...args], { cwd, env })
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(process.execPath, [pnpmEntry, ...args], {
+    const child = spawn(executable, [...entryArguments, ...args], {
       cwd,
       env,
       stdio: 'inherit',
