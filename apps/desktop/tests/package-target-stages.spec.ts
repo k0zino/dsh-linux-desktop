@@ -221,3 +221,28 @@ it('fails debugging packages when runtime verification fails', async () => {
   expect(stages.at(-1)).toBe(failure)
   expect(writeFileSync).not.toHaveBeenCalled()
 })
+
+it('spawns a standalone pnpm executable instead of handing it to Node', async () => {
+  vi.stubEnv('npm_execpath', '/fixture/bin/pnpm')
+  const calls: { executable: string; args: readonly string[] }[] = []
+  const run = { directory: 'fixture-record', finish: vi.fn(),
+    run: vi.fn(async (_stage: string, executable: string, args: readonly string[]) => {
+      calls.push({ executable, args })
+    }) }
+  await packageTarget(parseDesktopPackageInvocation(['linux-x64'], 'linux', 'x64'), environment, run)
+  // A standalone pnpm executable must be spawned directly; Node would parse it as JavaScript.
+  expect(calls.map(call => call.executable)).toEqual(calls.map(() => '/fixture/bin/pnpm'))
+  expect(calls[0]!.args[0]).toBe('run')
+})
+
+it('runs a JavaScript pnpm entry point through Node', async () => {
+  vi.stubEnv('npm_execpath', '/fixture/bin/pnpm.cjs')
+  const calls: { executable: string; args: readonly string[] }[] = []
+  const run = { directory: 'fixture-record', finish: vi.fn(),
+    run: vi.fn(async (_stage: string, executable: string, args: readonly string[]) => {
+      calls.push({ executable, args })
+    }) }
+  await packageTarget(parseDesktopPackageInvocation(['linux-x64'], 'linux', 'x64'), environment, run)
+  expect(calls[0]!.executable).toBe(process.execPath)
+  expect(calls[0]!.args[0]).toBe('/fixture/bin/pnpm.cjs')
+})
