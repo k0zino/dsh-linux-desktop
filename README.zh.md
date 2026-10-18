@@ -55,6 +55,7 @@ pnpm --dir apps/desktop run package:linux:x64
 5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
 6. **客户端身份上报约束**:DeepSeek 平台后端校验 `x-client-platform` 请求头白名单，不接受 `desktop-linux`，否则登录在 `auth_exchange` 被 422 拒绝；因此 Linux 端沿用上游取值（Host 侧 `web`、内嵌页面 `desktop-mac`)，不做改动。
 7. **构建版本号发现修复**(`desktop-build-version-discovery.ts`):`--build-version auto` 的本地序号扫描此前只认 mac/win 产物名（`.exe/.dmg/.zip`),Linux 产物（`.AppImage/.deb/.rpm/.pacman`）会被漏算而重发同一序号；同时 Linux 目标不再误查 macOS 更新桶。
+8. **菜单栏默认隐藏**:Linux 窗口设置 `autoHideMenuBar`，应用菜单默认收起、按 Alt 呼出；菜单模型仍然注册，KDE 全局菜单可以继续通过 D-Bus 读取。
 
 ## 已知限制
 

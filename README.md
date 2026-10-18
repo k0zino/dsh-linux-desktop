@@ -55,6 +55,7 @@ All changes live under `apps/desktop/` and stay a linear diff against upstream m
 5. **Icons and desktop integration**: `resources/icons/` provides 16~1024 multi-size icons, and `desktopName` + `syncDesktopName` associate running windows with the .desktop entry; X11 additionally sets the runtime `BrowserWindow` icon.
 6. **Client identity reporting constraint**: the DeepSeek platform backend validates an allowlist for the `x-client-platform` request header and does not accept `desktop-linux` — otherwise sign-in is rejected with 422 at `auth_exchange`. The Linux port therefore keeps the upstream values (`web` on the Host side, `desktop-mac` for embedded pages) unchanged.
 7. **Build version discovery fix** (`desktop-build-version-discovery.ts`): the local index scan for `--build-version auto` previously only recognized mac/win artifact names (`.exe/.dmg/.zip`), so Linux artifacts (`.AppImage/.deb/.rpm/.pacman`) were miscounted and a taken index could be reissued; the Linux target also no longer queries the macOS update bucket by mistake.
+8. **Menu bar hidden by default**: Linux windows set `autoHideMenuBar`, so the application menu stays out of the way until Alt is pressed; the menu model remains registered, so KDE's global menu keeps reading it over D-Bus.
 
 ## Known limitations
 

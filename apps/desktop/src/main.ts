@@ -213,8 +213,10 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
     minHeight: 600,
     show,
     // X11 window managers read the window icon; Wayland associates it through the desktop entry.
+    // The hidden menu bar answers Alt; KDE's global menu still reads the model over D-Bus.
     ...(process.platform === 'linux' ? {
       icon: join(app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'), 'icon.png'),
+      autoHideMenuBar: true,
     } : {}),
     ...(process.platform === 'win32' && primary ? {
       titleBarStyle: 'hidden' as const,

@@ -839,6 +839,8 @@ describe('desktop main startup', () => {
     } else {
       expect(window.options).not.toHaveProperty('titleBarStyle')
       expect(window.options).not.toHaveProperty('vibrancy')
+      // Hidden by default and revealed by Alt; the menu model still feeds KDE's global menu.
+      expect(window.options).toMatchObject({ autoHideMenuBar: true })
     }
     expect(harness.hosts).toHaveLength(0)
   })
