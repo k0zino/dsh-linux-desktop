@@ -30,9 +30,9 @@ pkgbase = deepseek-harness-desktop-bin
 	noextract = deepseek-harness-0.2.1-rc.2-linux-x64.pacman
 	options = !strip
 	options = !debug
-	source = deepseek-harness-0.2.1-rc.2-linux-x64.pacman::https://github.com/k0zino/dsh-linux-desktop/releases/download/v0.2.1-rc.2-linux.1/deepseek-harness-0.2.1-rc.2-linux-x64.pacman
+	source = deepseek-harness-0.2.1-rc.2-linux-x64.pacman::https://github.com/k0zino/dsh-linux-desktop/releases/download/v0.2.1-rc.2-linux.2/deepseek-harness-0.2.1-rc.2-linux-x64.pacman
 	source = LICENSE::https://raw.githubusercontent.com/k0zino/dsh-linux-desktop/master/LICENSE
-	sha256sums = 6877ea99102008b31e6dded84040fd1d7fa1f86bc0f6c79d4d81f23f2294e1c0
+	sha256sums = f8188a4428f57004bf3b3ec5193dbcac365d8a379ae53a169797f29bd2b63392
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
 pkgname = deepseek-harness-desktop-bin
