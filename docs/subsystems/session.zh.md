@@ -942,8 +942,8 @@ workspaceDesktop(): { name: string; available: boolean; fileManager: 'finder' | 
 @Remote('prompt') async prompt(request: SessionPromptRequest, signal: AbortSignal): Promise<SessionPromptValue>
 
 /**
- * Read one image proven reachable from the addressed Session log.
- * @param request - Session and attachment identities used for authorization.
+ * Read one image from the attachment store after gateway authorization.
+ * @param request - image reference and gateway permission scope; Session existence is not checked.
  * @returns the durable attachment reference and base64-encoded bytes.
  */
 @Remote('attachment') attachment(request: SessionAttachmentRequest): Promise<SessionAttachmentValue>
@@ -964,11 +964,51 @@ workspaceDesktop(): { name: string; available: boolean; fileManager: 'finder' | 
 
 /**
  * Read one cold-safe, message-aligned Session history page.
- * @param request - durable address, backward cursor, and page budget.
+ * @param request - durable address, optional fixed cut, backward cursor, and page budget.
  * @param signal - cancellation for persistence reads.
- * @returns one chronological page.
+ * @returns one chronological page with its inclusive cursor.
  */
-@Remote('page') page(request: SessionPageRequest, signal: AbortSignal): Promise<SessionPage>
+@Remote events(request: SessionPageRequest, signal: AbortSignal): Promise<SessionEventsPage>
+
+/**
+ * Subscribe to Session events without reading a snapshot.
+ * @param request - Session address.
+ * @param signal - subscription cancellation.
+ * @returns readiness and subsequent events, without a snapshot.
+ */
+@Remote({ mode: 'stream' }) observeEvent(request: SessionObserveEventRequest, signal: AbortSignal): AsyncIterable<SessionEventFrame>
+
+/**
+ * Subscribe to sparse Session projection changes.
+ * @param request - target Session.
+ * @param signal - subscription cancellation.
+ * @returns readiness and sparse projection changes.
+ */
+@Remote({ mode: 'stream' }) observeProjections(request: SessionProjectionsRequest, signal: AbortSignal): AsyncIterable<SessionProjectionFrame>
+
+/**
+ * Read passive Session state.
+ * @param request - target Session.
+ * @param signal - read cancellation.
+ * @returns current passive state.
+ */
+@Remote state(request: SessionStateRequest, signal: AbortSignal): Promise<SessionState>
+
+/**
+ * Subscribe to complete Session state replacements.
+ * @param request - target Session.
+ * @param signal - subscription cancellation.
+ * @returns complete passive state replacements.
+ */
+@Remote({ mode: 'stream' }) observeState(request: SessionStateRequest, signal: AbortSignal): AsyncIterable<SessionState>
+
+/**
+ * Wait for Session quiescence or pending input with bounded assistant output.
+ * @param request - Session, wait bounds and output window.
+ * @param signal - caller cancellation.
+ * @returns stopping state and bounded assistant output.
+ */
+@Remote wait(request: SessionWaitRequest, signal: AbortSignal): Promise<SessionWaitValue>
 
 /**
  * Follow one Session log from its opening or resume cursor.
@@ -985,7 +1025,7 @@ workspaceDesktop(): { name: string; available: boolean; fileManager: 'finder' | 
  * @param signal - cancellation for the Session read.
  * @returns a sequenced baseline, cached hints when migration is deferred, or null when absent.
  */
-@Remote('projections') async projections(request: SessionProjectionsRequest, signal: AbortSignal): Promise<SessionProjectionsValue>
+@Remote('projections') projections(request: SessionProjectionsRequest, signal: AbortSignal): Promise<SessionProjectionsValue>
 
 /**
  * Stream a complete live-control baseline followed by replacement frames.
