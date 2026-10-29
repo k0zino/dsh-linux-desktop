@@ -46,7 +46,7 @@ pnpm --dir apps/desktop run package:linux:x64
 
 ## 相对上游的改动
 
-全部改动集中在 `apps/desktop/`，与上游 master 保持线性 diff，便于 rebase:
+改动与上游 master 保持线性 diff，便于 rebase；大部分集中在 `apps/desktop/`，共享的顶栏命名也涉及 `packages/client/`:
 
 1. **linux-x64 目标全链路**:`desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` 等注册 linux 目标、四种打包格式与本地专用（无签名、无自动更新）的发布策略。
 2. **sharp 换 WASM 后端**(`prepare-dsh.ts` 的 `installSharpWasmBackend`)：原生 sharp 在 Electron on Linux 下解码即段错误，打包时从 registry 暂存 `@img/sharp-wasm32` 并移除原生二进制。
@@ -55,7 +55,7 @@ pnpm --dir apps/desktop run package:linux:x64
 5. **图标与桌面集成**:`resources/icons/` 提供 16~1024 多尺寸图标，`desktopName` + `syncDesktopName` 让运行中的窗口与 .desktop 条目正确关联，X11 下另设 `BrowserWindow` 的运行时 icon。
 6. **客户端身份上报约束**:DeepSeek 平台后端校验 `x-client-platform` 请求头白名单，不接受 `desktop-linux`，否则登录在 `auth_exchange` 被 422 拒绝；因此 Linux 端沿用上游取值（Host 侧 `web`、内嵌页面 `desktop-mac`)，不做改动。
 7. **构建版本号发现修复**(`desktop-build-version-discovery.ts`):`--build-version auto` 的本地序号扫描此前只认 mac/win 产物名（`.exe/.dmg/.zip`),Linux 产物（`.AppImage/.deb/.rpm/.pacman`）会被漏算而重发同一序号；同时 Linux 目标不再误查 macOS 更新桶。
-8. **菜单栏默认隐藏**:Linux 窗口设置 `autoHideMenuBar`，应用菜单默认收起、按 Alt 呼出；菜单模型仍然注册，KDE 全局菜单可以继续通过 D-Bus 读取。
+8. **原生桌面顶栏**:Linux 主窗口改为无边框，并绘制与 Windows 相同的 40 DIP 顶栏，由 Electron 绘制圆角和桌面自身的系统主题窗口按钮。顶栏承载本地化的“应用/编辑”菜单（无边框窗口没有原生菜单栏）；菜单模型仍然注册，KDE 全局菜单可以继续通过 D-Bus 读取。
 
 ## 已知限制
 

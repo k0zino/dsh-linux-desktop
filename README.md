@@ -46,7 +46,7 @@ Artifacts land in `apps/desktop/.desktop-build/targets/linux-x64/artifacts/`; th
 
 ## Changes relative to upstream
 
-All changes live under `apps/desktop/` and stay a linear diff against upstream master, so rebasing is easy:
+Changes stay a linear diff against upstream master, so rebasing is easy. Most live under `apps/desktop/`; the shared caption naming also touches `packages/client/`:
 
 1. **The full linux-x64 target pipeline**: `desktop-build-paths.mjs` / `package-target.ts` / `electron-builder-config.mjs` / `desktop-package-environment.mjs` and friends register the linux target, the four packaging formats, and a local-only release policy (no signing, no auto-update).
 2. **sharp swapped for the WASM backend** (`installSharpWasmBackend` in `prepare-dsh.ts`): native sharp deterministically segfaults on decode under Electron on Linux, so packaging stages `@img/sharp-wasm32` from the registry and removes the native binaries.
@@ -55,7 +55,7 @@ All changes live under `apps/desktop/` and stay a linear diff against upstream m
 5. **Icons and desktop integration**: `resources/icons/` provides 16~1024 multi-size icons, and `desktopName` + `syncDesktopName` associate running windows with the .desktop entry; X11 additionally sets the runtime `BrowserWindow` icon.
 6. **Client identity reporting constraint**: the DeepSeek platform backend validates an allowlist for the `x-client-platform` request header and does not accept `desktop-linux` — otherwise sign-in is rejected with 422 at `auth_exchange`. The Linux port therefore keeps the upstream values (`web` on the Host side, `desktop-mac` for embedded pages) unchanged.
 7. **Build version discovery fix** (`desktop-build-version-discovery.ts`): the local index scan for `--build-version auto` previously only recognized mac/win artifact names (`.exe/.dmg/.zip`), so Linux artifacts (`.AppImage/.deb/.rpm/.pacman`) were miscounted and a taken index could be reissued; the Linux target also no longer queries the macOS update bucket by mistake.
-8. **Menu bar hidden by default**: Linux windows set `autoHideMenuBar`, so the application menu stays out of the way until Alt is pressed; the menu model remains registered, so KDE's global menu keeps reading it over D-Bus.
+8. **Native desktop caption**: the Linux main window is frameless and draws the same 40 DIP caption row as Windows, so Electron renders rounded corners and the desktop's own system-themed window controls. The caption carries the localized Application/Edit menus (a frameless window has no native menu bar); the menu model remains registered, so KDE's global menu keeps reading it over D-Bus.
 
 ## Known limitations
 
