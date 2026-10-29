@@ -292,8 +292,8 @@ describe('web e2e: Markdown image rendering', () => {
     const lightboxClose = lightbox.getByRole('button', { name: 'Close image preview' })
     for (const windows of [true, false]) {
       await page.evaluate((value) => {
-        document.documentElement.toggleAttribute('data-windows-titlebar', value)
-        document.documentElement.style.setProperty('--dsh-windows-titlebar-height', value ? '40px' : '')
+        document.documentElement.toggleAttribute('data-desktop-titlebar', value)
+        document.documentElement.style.setProperty('--dsh-desktop-titlebar-height', value ? '40px' : '')
       }, windows)
       // The Windows caption stays unpainted and the close control sits below it.
       expect((await lightboxMask.boundingBox())?.y).toBe(windows ? 40 : 0)

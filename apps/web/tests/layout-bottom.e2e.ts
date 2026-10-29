@@ -66,9 +66,9 @@ it('reserves bottom content height without remounting it on main-panel navigatio
       for (const platform of ['darwin', 'windows', 'browser']) {
         await page.evaluate((value) => {
           document.documentElement.removeAttribute('data-platform')
-          document.documentElement.toggleAttribute('data-windows-titlebar', value === 'windows')
+          document.documentElement.toggleAttribute('data-desktop-titlebar', value === 'windows')
           if (value === 'darwin') document.documentElement.setAttribute('data-platform', value)
-          document.documentElement.style.setProperty('--dsh-windows-titlebar-height', '40px')
+          document.documentElement.style.setProperty('--dsh-desktop-titlebar-height', '40px')
         }, platform)
         expected.push(`${platform}: ${JSON.stringify(await check(360, platform === 'windows' ? 40 : 0))}`)
       }

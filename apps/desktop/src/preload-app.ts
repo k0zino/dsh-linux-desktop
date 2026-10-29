@@ -6,7 +6,7 @@ import { DESKTOP_IPC, SCHEME, type DshDesktopProductApi, type DesktopUpdatePrese
 import { PLATFORM_IPC } from './platform-ipc.ts'
 import { markDocumentPlatform, syncWindowFullscreen } from './preload-platform.ts'
 import { syncNativeTheme } from './preload-theme.ts'
-import { syncWindowsAppearance } from './preload-windows.ts'
+import { syncTitleBarAppearance } from './preload-titlebar.ts'
 import { installMandatoryUpdateOverlay } from './preload-mandatory-overlay.ts'
 import { createDesktopBrowserBridge } from './preload-browser.ts'
 import type { FileDragHandle } from '@deepseek-ai/dsh-util-file-drag'
@@ -83,7 +83,7 @@ if (location.protocol === `${SCHEME}:` && location.hostname === 'app') {
     if (previous === null) body.removeAttribute('tabindex')
     else body.setAttribute('tabindex', previous)
   })
-  syncWindowsAppearance()
+  syncTitleBarAppearance()
   if (process.platform === 'win32') installMandatoryUpdateOverlay()
   contextBridge.exposeInMainWorld('__DSH_DIRECTORY_PICKER__', {
     pick: () => ipcRenderer.invoke(DESKTOP_IPC.directoryPick) as Promise<string | null>,

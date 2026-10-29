@@ -29,7 +29,7 @@ const SHELL_DRAG_SELECTOR = "html[data-platform='darwin'] [data-window-drag]"
 const WINDOWS_CAPTION = 'client/ui-layout/src/client/AppFrame.module.css'
 
 /** That caption row's selector, as authored. */
-const WINDOWS_CAPTION_SELECTOR = ':global([data-windows-titlebar]) .frame::before'
+const WINDOWS_CAPTION_SELECTOR = ':global([data-desktop-titlebar]) .frame::before'
 
 /** The mark a chrome row puts on the element that owns its drag. */
 const DRAG_MARK = 'data-window-drag'

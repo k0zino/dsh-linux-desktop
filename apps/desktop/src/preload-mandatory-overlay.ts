@@ -2,7 +2,7 @@
 import { ipcRenderer } from 'electron'
 import { MANDATORY_IPC } from './mandatory-update-ipc.ts'
 import type { MandatoryUpdateView } from './mandatory-update-window.ts'
-import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
+import { TITLEBAR_HEIGHT } from './titlebar-layout.ts'
 
 /** Keep update actions on a private channel to the shell frame; the shared product DOM is not a tamper-proof display. */
 export function installMandatoryUpdateOverlay(): void {
@@ -26,7 +26,7 @@ export function installMandatoryUpdateOverlay(): void {
     closing = undefined
     if (frame === undefined) {
       host = document.createElement('div')
-      host.style.cssText = `position:fixed;top:${WINDOWS_TITLEBAR_HEIGHT}px;left:0;right:0;bottom:0;z-index:2147483647`
+      host.style.cssText = `position:fixed;top:${TITLEBAR_HEIGHT}px;left:0;right:0;bottom:0;z-index:2147483647`
       const shadow = host.attachShadow({ mode: 'closed' })
       frame = document.createElement('iframe')
       frame.title = state.locale.messages.mandatoryTitle

@@ -53,9 +53,6 @@
     "4fb87a7468d8632606fe338680cfcdec41051b543052a0ec14c55862b43ed928": 1,
     "bb108d5dfeed36030bc4cf80fbbef2ef0cbcc72ab603bad208560b55bbf54875": 1
   },
-  "apps/desktop/tests/preload-windows.client.spec.ts": {
-    "fdbd843bccc38b95f572f49587aacc29b9b0c67390d922ab5404a5935c747487": 1
-  },
   "apps/desktop/tests/update-attention.spec.ts": {
     "326597b335539db945b2e3b7c86638d40849d2077c0a5670d064e45486f4e407": 1,
     "69a4620ccedea854de695bc105dc5028ca85dc34ff0f9f762160207cf029dff6": 1

@@ -255,13 +255,13 @@
    follows the browser layout. The selected cell receives initial focus and
    scrolls into view when the panel opens. */
 @media (max-width: 767px) {
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .overlay {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .overlay {
     position: absolute;
     height: 100%;
     background: var(--dsw-alias-bg-layer-2);
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .panel {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .panel {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas:
@@ -274,25 +274,25 @@
     border-radius: 0;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .navTitle {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .navTitle {
     padding: 22px 0 0 16px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .header {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .header {
     height: auto;
     padding: 20px 16px 0 10px;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .nav {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .nav {
     padding: 0;
   }
 
   /* The strip runs edge to edge and pads its own ends, so the first cell lines
      up with the title and the last one stays clear of the panel edge. */
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .navList {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .navList {
     flex-direction: row;
     gap: 4px;
     padding: 12px 16px 14px;
@@ -302,25 +302,25 @@
     scrollbar-width: none;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .navList::-webkit-scrollbar {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .navList::-webkit-scrollbar {
     display: none;
   }
 
   /* Cells grow into spare width and hold a 108px floor. The four shipped
      sections already measure more than a 390px viewport, so the next cell shows
      past the edge and the strip reads as scrollable. */
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .navCell {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .navCell {
     flex: 1 0 auto;
     justify-content: center;
     min-width: 108px;
     padding: 0 14px;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .navLabel {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .navLabel {
     flex: none;
   }
 
-  :global(html:not([data-windows-titlebar]):not([data-platform='darwin'])) .options {
+  :global(html:not([data-desktop-titlebar]):not([data-platform='darwin'])) .options {
     padding: 0 16px 24px;
   }
 }

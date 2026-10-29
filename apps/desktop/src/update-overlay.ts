@@ -1,7 +1,7 @@
 /** Isolated update documents share their owner's native window and input lifetime. */
 import { WebContentsView, type BrowserWindow, type WebContents, type View } from 'electron'
 import type { EventEmitter } from 'node:events'
-import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
+import { TITLEBAR_HEIGHT } from './titlebar-layout.ts'
 
 /** Main-owned document with no independent native window or activation state. */
 export interface DesktopUpdateOverlay {
@@ -48,7 +48,9 @@ export class DesktopUpdateOverlays {
     input.active++; input.revision++
     const resize = (): void => {
       const { width, height } = parent.getContentBounds()
-      const top = process.platform === 'win32' ? WINDOWS_TITLEBAR_HEIGHT : 0
+      // The caption row sits above the content on Windows and Linux; macOS hides
+      // its traffic lights inside the content instead.
+      const top = process.platform === 'win32' || process.platform === 'linux' ? TITLEBAR_HEIGHT : 0
       view.setBounds({ x: 0, y: top, width, height: Math.max(0, height - top) })
     }
     const focus = (): void => {

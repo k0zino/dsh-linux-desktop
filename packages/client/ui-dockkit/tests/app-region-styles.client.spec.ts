@@ -26,9 +26,9 @@ const regionRules = [...css.matchAll(/(?<sel>[^{}]+)\{(?<body>[^{}]*)\}/g)]
   ] as const)
 
 it('keeps Windows floating headers 20px below the caption, including restored positions', () => {
-  const captionRule = css.split(':global(html[data-windows-titlebar]) .float')[1]?.split('}')[0]
-  expect(captionRule).toContain('--dsh-dockkit-float-top: calc(var(--dsh-windows-titlebar-height) + 20px);')
-  expect(css).toMatch(/:global\(html\[data-windows-titlebar\]\[data-fullscreen\]\) \.float\s*\{\s*--dsh-dockkit-float-top: 20px;/)
+  const captionRule = css.split(':global(html[data-desktop-titlebar]) .float')[1]?.split('}')[0]
+  expect(captionRule).toContain('--dsh-dockkit-float-top: calc(var(--dsh-desktop-titlebar-height) + 20px);')
+  expect(css).toMatch(/:global\(html\[data-desktop-titlebar\]\[data-fullscreen\]\) \.float\s*\{\s*--dsh-dockkit-float-top: 20px;/)
 })
 
 it('clamps a resting floating panel\'s position and size into the viewport and below the caption floor', () => {

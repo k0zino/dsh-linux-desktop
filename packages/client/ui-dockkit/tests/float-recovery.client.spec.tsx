@@ -427,8 +427,8 @@ describe('the viewport projection', () => {
   })
 
   it('keeps the 20px floor on a Windows root that publishes no caption height', () => {
-    document.documentElement.setAttribute('data-windows-titlebar', '')
-    onTestFinished(() => { document.documentElement.removeAttribute('data-windows-titlebar') })
+    document.documentElement.setAttribute('data-desktop-titlebar', '')
+    onTestFinished(() => { document.documentElement.removeAttribute('data-desktop-titlebar') })
     const h = mounted({ x: 100, y: 0, width: 300, height: 200 })
     expect(h.top()).toBe(20)
   })

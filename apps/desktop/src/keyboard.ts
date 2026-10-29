@@ -25,7 +25,7 @@ export function installDesktopShortcuts(
    * @param keyCode - edit key.
    * @param modifiers - edit modifiers.
    */
-  sendEditingKey(keyCode: string, modifiers: Array<'control'>): void
+  sendEditingKey(keyCode: string, modifiers: Array<'control' | 'shift'>): void
   attach(window: BrowserWindow): void
   /**
    * Intercept an approved browser guest's keys until its lease ends.

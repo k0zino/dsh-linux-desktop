@@ -78,11 +78,11 @@ function raised(state: LayoutState, paneId: PaneId): boolean {
  */
 function floatBounds(): FloatBounds {
   const root = document.documentElement
-  const windows = root.hasAttribute('data-windows-titlebar')
+  const windows = root.hasAttribute('data-desktop-titlebar')
   // Desktop publishes the caption height in pixels on the root's inline style;
   // a root without it keeps the 20px floor.
   const caption = windows && !root.hasAttribute('data-fullscreen')
-    ? Number.parseFloat(root.style.getPropertyValue('--dsh-windows-titlebar-height')) : 0
+    ? Number.parseFloat(root.style.getPropertyValue('--dsh-desktop-titlebar-height')) : 0
   return { top: windows ? (Number.isFinite(caption) ? caption : 0) + 20 : 0, width: window.innerWidth, height: window.innerHeight }
 }
 

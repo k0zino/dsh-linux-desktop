@@ -218,8 +218,8 @@ describe('web e2e: macOS window drag coverage', () => {
       const mark = (): void => {
         document.documentElement.setAttribute('data-platform', value)
         if (value === 'win32') {
-          document.documentElement.setAttribute('data-windows-titlebar', '')
-          document.documentElement.style.setProperty('--dsh-windows-titlebar-height', '40px')
+          document.documentElement.setAttribute('data-desktop-titlebar', '')
+          document.documentElement.style.setProperty('--dsh-desktop-titlebar-height', '40px')
         }
       }
       if (document.documentElement === null) document.addEventListener('DOMContentLoaded', mark, { once: true })

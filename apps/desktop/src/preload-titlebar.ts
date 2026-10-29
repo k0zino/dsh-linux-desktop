@@ -1,30 +1,38 @@
-import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
-/** Synchronizes Windows context menus and caption colors with the application document. */
+import { TITLEBAR_HEIGHT } from './titlebar-layout.ts'
+/** Synchronizes the caption row, its menus, and the native caption colors with the application document. */
 import { ipcRenderer } from 'electron'
 import { DESKTOP_IPC } from './ipc.ts'
-import { installWindowsMenu } from './preload-menu.ts'
+import { installCaptionMenu } from './preload-menu.ts'
 
-/** Install the Windows-only titlebar marker and observe application language and palette changes. */
-export function syncWindowsAppearance(): void {
-  if (process.platform !== 'win32') return
+/**
+ * Install the caption row marker and observe application language and palette changes.
+ * Windows and Linux draw their caption row inside the window and keep the native
+ * window controls above it; macOS keeps its own inset traffic lights.
+ */
+export function syncTitleBarAppearance(): void {
+  if (process.platform !== 'win32' && process.platform !== 'linux') return
   const mark = (): void => {
     const root = document.documentElement
-    root.dataset.windowsTitlebar = ''
-    root.style.setProperty('--dsh-windows-titlebar-height', `${WINDOWS_TITLEBAR_HEIGHT}px`)
+    root.dataset.desktopTitlebar = ''
+    root.style.setProperty('--dsh-desktop-titlebar-height', `${TITLEBAR_HEIGHT}px`)
   }
   // The root can be absent before the HTML parser creates it.
   if ((document.documentElement as HTMLElement | null) !== null) mark()
   const install = (): void => {
     mark()
     const root = document.documentElement
-    const menu = installWindowsMenu()
+    const menu = installCaptionMenu()
     const probe = document.createElement('span')
     probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;background-color:var(--dsw-specific-sidebar-fill);color:var(--dsw-alias-label-primary)'
     document.body.append(probe)
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1
     const context = canvas.getContext('2d', { willReadFrequently: true })
-    if (context === null) throw new Error('Desktop caption requires a 2D canvas context')
+    // A renderer without a 2D context keeps the platform's fallback caption colors.
+    if (context === null) {
+      probe.remove()
+      return
+    }
     const nativeColor = (color: string): string => {
       context.clearRect(0, 0, 1, 1)
       context.fillStyle = color
@@ -42,7 +50,7 @@ export function syncWindowsAppearance(): void {
       if (current === previous) return
       previous = current
       menu.update()
-      ipcRenderer.send(DESKTOP_IPC.windowsAppearance, ...values)
+      ipcRenderer.send(DESKTOP_IPC.titleBarAppearance, ...values)
     }
     const observer = new MutationObserver(send)
     observer.observe(root, { attributes: true, attributeFilter: ['lang'] })

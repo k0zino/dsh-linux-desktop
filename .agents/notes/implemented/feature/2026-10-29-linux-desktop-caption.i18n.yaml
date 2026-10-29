@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-29-linux-desktop-caption.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-29-linux-desktop-caption.md
+/agent-note-the-linux-desktop-caption-row:
+  en: e07fcea945023db0
+  zh: ef6907ff803e4568
+/agent-note-the-linux-desktop-caption-row/problem:
+  en: 589f58d6710d969c
+  zh: e3e80ed99df606ff
+/agent-note-the-linux-desktop-caption-row/decision:
+  en: dd0b4e15958e6b2e
+  zh: b6ff7a53227ea8fe
+/agent-note-the-linux-desktop-caption-row/alternatives-considered:
+  en: ef76114a13385d88
+  zh: a7fe8c186af59f92
+/agent-note-the-linux-desktop-caption-row/consequences:
+  en: e55cb6fdfba606a8
+  zh: 46fd94ee8bba2a7c
+/agent-note-the-linux-desktop-caption-row/testing:
+  en: c807cb32fd32456a
+  zh: e135a723e9e24a56

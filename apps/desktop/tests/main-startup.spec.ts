@@ -1,7 +1,7 @@
 import { parsePluginOperationRecord } from '@deepseek-ai/dsh-plugin-manager/diagnostic'
 import type { DesktopHostProcess } from '../src/host-process.ts'
 import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
-import { WINDOWS_TITLEBAR_HEIGHT } from '../src/windows-layout.ts'
+import { TITLEBAR_HEIGHT } from '../src/titlebar-layout.ts'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { IpcMainInvokeEvent } from 'electron'
 import { join } from 'node:path'
@@ -418,7 +418,7 @@ function applicationMenuItems(): MenuItemConstructorOptions[] {
   const native = harness.menu.mock.calls[0]?.[0][0]?.submenu
   if (Array.isArray(native)) return native
   const sender = harness.windows[0]!.webContents
-  void harness.handlers.get(DESKTOP_IPC.windowsMenu)!({ sender, senderFrame: sender.mainFrame }, 'application', 0, 0)
+  void harness.handlers.get(DESKTOP_IPC.captionMenu)!({ sender, senderFrame: sender.mainFrame }, 'application', 0, 0)
   return harness.menu.mock.lastCall![0]
 }
 
@@ -852,7 +852,7 @@ describe('desktop main startup', () => {
     }
   })
 
-  it.each(['darwin', 'win32', 'linux'] as const)('limits native titlebar styling to macOS on %s', async (platform) => {
+  it.each(['darwin', 'win32', 'linux'] as const)('applies the %s window chrome', async (platform) => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
     await import('../src/main.ts')
     await harness.preparing.promise
@@ -860,17 +860,21 @@ describe('desktop main startup', () => {
     expect(window.urls).toEqual(['dsh-app://app/'])
     if (platform === 'darwin') {
       expect(window.options).toMatchObject({ titleBarStyle: 'hiddenInset', vibrancy: 'sidebar', backgroundColor: '#00000000' })
-    } else if (platform === 'win32') {
-      expect(window.options).toMatchObject({ titleBarStyle: 'hidden', titleBarOverlay: { height: WINDOWS_TITLEBAR_HEIGHT } })
-      expect(window.options).not.toHaveProperty('vibrancy')
-      expect(harness.menu.mock.calls[0]![0]).toEqual([
-        { role: 'toggleDevTools', visible: false },
-        { role: 'toggleDevTools', visible: false, accelerator: 'F12' },
-      ])
     } else {
-      expect(window.options).not.toHaveProperty('titleBarStyle')
+      // Windows and Linux draw the caption row inside a frameless window and keep
+      // the desktop's own window controls above it.
+      expect(window.options).toMatchObject({ titleBarStyle: 'hidden', titleBarOverlay: { height: TITLEBAR_HEIGHT } })
       expect(window.options).not.toHaveProperty('vibrancy')
-      // Hidden by default and revealed by Alt; the menu model still feeds KDE's global menu.
+      if (platform === 'win32') {
+        expect(harness.menu.mock.calls[0]![0]).toEqual([
+          { role: 'toggleDevTools', visible: false },
+          { role: 'toggleDevTools', visible: false, accelerator: 'F12' },
+        ])
+      }
+    }
+    if (platform === 'linux') {
+      // Hidden by default; the menu model still feeds KDE's global menu, and the
+      // caption row carries the Desktop-owned Application and Edit menus.
       expect(window.options).toMatchObject({ autoHideMenuBar: true })
     }
     expect(harness.hosts).toHaveLength(0)
@@ -888,7 +892,7 @@ describe('desktop main startup', () => {
     expect((await handler(new Request('dsh-app://foreign/index.html'))).status).toBe(404)
   })
 
-  it.each(['darwin', 'win32'] as const)('relays the %s fullscreen state on transitions and after each load', async (platform) => {
+  it.each(['darwin', 'win32', 'linux'] as const)('relays the %s fullscreen state on transitions and after each load', async (platform) => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
     await import('../src/main.ts')
     await harness.preparing.promise
@@ -909,16 +913,6 @@ describe('desktop main startup', () => {
     window.destroyed = true
     window.emit('enter-full-screen')
     expect(sent()).toHaveLength(relayed)
-  })
-
-  it.each(['linux'] as const)('registers no fullscreen relay on %s', async (platform) => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
-    await import('../src/main.ts')
-    await harness.preparing.promise
-    const window = harness.windows[0]!
-    window.emit('enter-full-screen')
-    window.webContents.emit('did-finish-load')
-    expect(window.webContents.send.mock.calls.filter(([channel]) => channel === DESKTOP_IPC.windowFullscreen)).toHaveLength(0)
   })
 
   it('covers the macOS vibrancy reattach gap with an opaque base while minimized or hidden', async () => {
@@ -968,7 +962,7 @@ describe('desktop main startup', () => {
     await import('../src/main.ts')
     await harness.preparing.promise
     const window = harness.windows[0]!
-    const listener = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.windowsAppearance)![1]
+    const listener = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.titleBarAppearance)![1]
     const event = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
     listener({ ...event, senderFrame: { url: 'dsh-app://app/' } }, 'zh-CN', '#ffffff', '#000000')
     expect(window.setTitleBarOverlay).not.toHaveBeenCalled()
@@ -1001,7 +995,7 @@ describe('desktop main startup', () => {
     await import('../src/main.ts')
     await harness.preparing.promise
     const window = harness.windows[0]!
-    const appearance = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.windowsAppearance)![1]
+    const appearance = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.titleBarAppearance)![1]
     appearance({ sender: window.webContents, senderFrame: window.webContents.mainFrame }, 'en', '#fff', '#000')
     harness.prepared.resolve()
     await harness.hostStarted.promise
@@ -1016,16 +1010,16 @@ describe('desktop main startup', () => {
     expect((harness.dialog.showMessageBox.mock.calls[0]![0] as MessageBoxOptions).message).toBe(zh.fatalSummary)
   })
 
-  it('maps Windows caption menus to localized native commands and rejects foreign popup requests', async () => {
+  it('maps caption menus to localized native commands and rejects foreign popup requests', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
     await import('../src/main.ts')
     await harness.preparing.promise
     const window = harness.windows[0]!
     const event = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
-    const appearance = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.windowsAppearance)![1]
+    const appearance = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.titleBarAppearance)![1]
     harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.localeChanged)![1](event, 'zh')
     appearance(event, 'zh-CN', '#fff', '#000')
-    const handler = harness.handlers.get(DESKTOP_IPC.windowsMenu)!
+    const handler = harness.handlers.get(DESKTOP_IPC.captionMenu)!
     const foreignEvent = { ...event, sender: {} }
     expect(() => handler(foreignEvent, 'application', 48, 34)).toThrow('rejected sender')
     expect(() => handler(event, 'arbitrary-command', 48, 34)).toThrow('invalid popup request')
@@ -1050,6 +1044,26 @@ describe('desktop main startup', () => {
       expect(window.webContents.sendInputEvent).toHaveBeenNthCalledWith(index * 2 + 1, { type: 'keyDown', keyCode, modifiers })
       expect(window.webContents.sendInputEvent).toHaveBeenNthCalledWith(index * 2 + 2, { type: 'keyUp', keyCode, modifiers })
     }
+    harness.popup.mock.lastCall![0].callback!()
+    await edit
+  })
+
+  it('serves the Linux caption menus with the platform redo chord and overlay colors', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux')
+    await import('../src/main.ts')
+    await harness.preparing.promise
+    const window = harness.windows[0]!
+    const event = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
+    const appearance = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.titleBarAppearance)![1]
+    appearance(event, 'en', 'rgb(249, 250, 251)', '#0f1115')
+    expect(window.setTitleBarOverlay).toHaveBeenCalledWith({ color: 'rgb(249, 250, 251)', symbolColor: '#0f1115' })
+    const handler = harness.handlers.get(DESKTOP_IPC.captionMenu)!
+    const edit = handler(event, 'edit', 104, 34)
+    const commands = harness.menu.buildFromTemplate.mock.lastCall![0].filter(item => item.type !== 'separator')
+    expect(commands[1]!.accelerator).toBe('Ctrl+Shift+Z')
+    const click = commands[1]!.click as () => void
+    click()
+    expect(window.webContents.sendInputEvent).toHaveBeenNthCalledWith(1, { type: 'keyDown', keyCode: 'Z', modifiers: ['control', 'shift'] })
     harness.popup.mock.lastCall![0].callback!()
     await edit
   })

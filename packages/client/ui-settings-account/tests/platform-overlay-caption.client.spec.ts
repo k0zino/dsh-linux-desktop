@@ -20,5 +20,5 @@ it('starts the return bar below the Desktop caption strip on Windows', () => {
   // The strip and its clearance token both come from the Desktop preload's
   // caption marker; without the offset the 48px return bar renders inside the
   // strip that the fixed caption menu host also occupies.
-  expect(declarations(':global([data-windows-titlebar]) .overlay')).toContain('padding-top: var(--dsh-windows-titlebar-height)')
+  expect(declarations(':global([data-desktop-titlebar]) .overlay')).toContain('padding-top: var(--dsh-desktop-titlebar-height)')
 })

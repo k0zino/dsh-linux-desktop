@@ -161,7 +161,7 @@ export function SidebarRoot({
     const timer = window.setTimeout(() => { setSettled(true) }, COLLAPSE_SETTLE_MS)
     return () => { window.clearTimeout(timer) }
   }, [collapsed])
-  const windowsTitlebar = document.documentElement.hasAttribute('data-windows-titlebar')
+  const windowsTitlebar = document.documentElement.hasAttribute('data-desktop-titlebar')
   const wide = windowsTitlebar ? !collapsed : !collapsed || !settled
   // The Windows titlebar hosts the New Session controls while the sidebar is collapsed.
   const openNewSession = (): void => {
@@ -169,7 +169,7 @@ export function SidebarRoot({
     startSession()
   }
   // The Windows caption menus occupy the strip to the right of these controls
-  // (that is what --dsh-windows-menu-start reserves), so a right-side bubble
+  // (that is what --dsh-desktop-menu-start reserves), so a right-side bubble
   // lands under their text. Below the caption is the only clear side.
   const captionTooltipSide = windowsTitlebar ? 'bottom' : 'right'
   // Freeze the content at its expanded width while it fades out (collapsed

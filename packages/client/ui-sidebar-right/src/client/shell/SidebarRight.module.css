@@ -90,12 +90,12 @@
    panel-wide no-drag would trade that drag affordance away. */
 
 /* Windows keeps caption controls above fullscreen file and terminal panels. */
-:global([data-windows-titlebar]) .panel[data-sidebar-right-panel='fullscreen'] {
-  max-width: calc(100vw - var(--dsh-windows-sidebar-width));
+:global([data-desktop-titlebar]) .panel[data-sidebar-right-panel='fullscreen'] {
+  max-width: calc(100vw - var(--dsh-desktop-sidebar-width));
 }
 
-:global([data-windows-titlebar]) .panel[data-sidebar-right-panel='fullscreen'] :global([data-dockkit-column='0'][data-dockkit-pane]) {
-  border-radius: var(--dsh-windows-content-radius) 0 0 0;
+:global([data-desktop-titlebar]) .panel[data-sidebar-right-panel='fullscreen'] :global([data-dockkit-column='0'][data-dockkit-pane]) {
+  border-radius: var(--dsh-desktop-content-radius) 0 0 0;
   corner-shape: round;
 }
 

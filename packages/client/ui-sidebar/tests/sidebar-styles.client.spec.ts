@@ -55,7 +55,7 @@ describe('SidebarRoot.module.css', () => {
     expect(declarations('.newSessionContent')?.get('justify-content')).toBe('center')
     expect(declarations(":global(html[data-platform='darwin']:not([data-fullscreen])) .root:not(.collapsed) > .topStrip > .toggle")?.get('transform')).toBe('translateX(4px)')
     expect(css).not.toContain(':not(.fading)')
-    expect(declarations(':global([data-windows-titlebar]) .root:not(.collapsed) .newSession')?.has('margin-left')).toBe(false)
+    expect(declarations(':global([data-desktop-titlebar]) .root:not(.collapsed) .newSession')?.has('margin-left')).toBe(false)
     expect(declarations('.topStrip')?.get('height')).toBe('52px')
     expect(declarations('.root.collapsed')?.get('padding')).toBe('18px 10px 6px')
   })

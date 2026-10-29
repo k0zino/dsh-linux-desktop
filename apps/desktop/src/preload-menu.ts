@@ -1,20 +1,20 @@
-/** Windows caption menu labels and native popup anchors, isolated from the Web client. */
+/** Caption menu labels and native popup anchors, isolated from the Web client. */
 import { ipcRenderer } from 'electron'
 import { DESKTOP_IPC } from './ipc.ts'
 import { resolveDesktopLocale } from './locale.ts'
 
 /**
- * Mount the Windows caption menubar without moving focus out of the active editor.
+ * Mount the caption menubar without moving focus out of the active editor.
  * @returns Language refresh and document teardown operations.
  */
-export function installWindowsMenu(): { update(): void; dispose(): void } {
+export function installCaptionMenu(): { update(): void; dispose(): void } {
   const host = document.createElement('div')
-  host.dataset.windowsMenu = ''
+  host.dataset.captionMenu = ''
   const shadow = host.attachShadow({ mode: 'open' })
   const style = document.createElement('style')
   style.textContent = `
-    :host { position: fixed; top: 0; left: var(--dsh-windows-menu-start, 48px); z-index: 1100;
-      height: var(--dsh-windows-titlebar-height); display: flex; align-items: center;
+    :host { position: fixed; top: 0; left: var(--dsh-desktop-menu-start, 48px); z-index: 1100;
+      height: var(--dsh-desktop-titlebar-height); display: flex; align-items: center;
       font-family: var(--dsw-font-family); -webkit-app-region: no-drag; }
     [role=menubar] { display: flex; gap: 2px; }
     button { height: 28px; padding: 0 10px; border: 0; border-radius: 6px;
@@ -64,7 +64,7 @@ export function installWindowsMenu(): { update(): void; dispose(): void } {
       const rect = button.getBoundingClientRect()
       button.setAttribute('aria-expanded', 'true')
       if (document.activeElement === host) restoreEditor()
-      try { await ipcRenderer.invoke(DESKTOP_IPC.windowsMenu, name, rect.left, rect.bottom) }
+      try { await ipcRenderer.invoke(DESKTOP_IPC.captionMenu, name, rect.left, rect.bottom) }
       catch (error) { console.error('Desktop caption menu failed', error) }
       finally { button.setAttribute('aria-expanded', 'false') }
     }

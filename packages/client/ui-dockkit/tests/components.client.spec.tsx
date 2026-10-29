@@ -1391,16 +1391,16 @@ describe('FloatLayer', () => {
     { fullscreen: true, savedY: 80, displayedY: 80 },
   ])('starts move and resize at $displayedY for saved y=$savedY, fullscreen=$fullscreen without layout reads', ({ fullscreen, savedY, displayedY }) => {
     const root = document.documentElement
-    const attributes = ['data-windows-titlebar', 'data-fullscreen', 'style'].map(name => [name, root.getAttribute(name)] as const)
+    const attributes = ['data-desktop-titlebar', 'data-fullscreen', 'style'].map(name => [name, root.getAttribute(name)] as const)
     onTestFinished(() => {
       for (const [name, value] of attributes) {
         if (value === null) root.removeAttribute(name)
         else root.setAttribute(name, value)
       }
     })
-    root.setAttribute('data-windows-titlebar', '')
+    root.setAttribute('data-desktop-titlebar', '')
     root.toggleAttribute('data-fullscreen', fullscreen)
-    root.style.setProperty('--dsh-windows-titlebar-height', '40px')
+    root.style.setProperty('--dsh-desktop-titlebar-height', '40px')
     const { intents, paneId, panel } = floating(undefined, savedY)
     const measure = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
     const computedStyle = vi.spyOn(window, 'getComputedStyle')

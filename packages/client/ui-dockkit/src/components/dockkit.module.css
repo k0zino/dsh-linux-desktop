@@ -775,11 +775,11 @@
   height: 40%;
 }
 
-:global(html[data-windows-titlebar]) .float {
-  --dsh-dockkit-float-top: calc(var(--dsh-windows-titlebar-height) + 20px);
+:global(html[data-desktop-titlebar]) .float {
+  --dsh-dockkit-float-top: calc(var(--dsh-desktop-titlebar-height) + 20px);
 }
 
-:global(html[data-windows-titlebar][data-fullscreen]) .float {
+:global(html[data-desktop-titlebar][data-fullscreen]) .float {
   --dsh-dockkit-float-top: 20px;
 }
 

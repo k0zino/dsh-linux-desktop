@@ -60,7 +60,7 @@ it('stacks font fields at narrow widths while keeping font-size controls on the 
       const dialog = page.getByRole('dialog', { name: '设置', exact: true })
       await dialog.getByRole('button', { name: '更多字体设置', exact: true }).click()
       await page.evaluate((platform) => {
-        document.documentElement.toggleAttribute('data-windows-titlebar', platform === 'win32')
+        document.documentElement.toggleAttribute('data-desktop-titlebar', platform === 'win32')
         if (platform === 'darwin') document.documentElement.setAttribute('data-platform', platform)
       }, platform)
 

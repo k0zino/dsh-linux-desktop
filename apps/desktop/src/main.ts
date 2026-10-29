@@ -1,5 +1,5 @@
 import type { ProductEventMap, ProductEvent } from '@deepseek-ai/dsh-client-product-analytics/types'
-import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
+import { TITLEBAR_HEIGHT } from './titlebar-layout.ts'
 /** Electron shell: desktop project ownership, custom protocol, windows, and lifecycle. */
 
 import { access, readFile, writeFile } from 'node:fs/promises'
@@ -234,7 +234,7 @@ function developmentHostInspectPort(enabled: boolean): number | undefined {
  * Opaque chrome fallback matching the built-in sidebar palette (the resolved
  * `--dsw-static-neutral-bluish-900` / `-50` tokens). An approximation for
  * custom themes: Windows swaps in the renderer's measured palette over the
- * windowsAppearance IPC, and macOS shows it only while minimized or hidden.
+ * titleBarAppearance IPC, and macOS shows it only while minimized or hidden.
  * @returns the sidebar fill hex for the active system color scheme.
  */
 function chromeFallbackFill(): string {
@@ -263,14 +263,22 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
     minHeight: 600,
     show,
     // X11 window managers read the window icon; Wayland associates it through the desktop entry.
-    // The hidden menu bar answers Alt; KDE's global menu still reads the model over D-Bus.
+    // The caption row carries the menus; KDE's global menu still reads the model over D-Bus.
     ...(process.platform === 'linux' ? {
       icon: join(app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'), 'icon.png'),
       autoHideMenuBar: true,
     } : {}),
     ...(process.platform === 'win32' && primary ? {
       titleBarStyle: 'hidden' as const,
-      titleBarOverlay: { height: WINDOWS_TITLEBAR_HEIGHT, color: chromeFallbackFill(),
+      titleBarOverlay: { height: TITLEBAR_HEIGHT, color: chromeFallbackFill(),
+        symbolColor: nativeTheme.shouldUseDarkColors ? '#f9fafb' : '#0f1115' },
+    } : {}),
+    // Linux draws its window controls over the application's own caption row, so the
+    // window is frameless: the desktop environment keeps the native control icons and
+    // rounds the frameless window's corners.
+    ...(process.platform === 'linux' ? {
+      titleBarStyle: 'hidden' as const,
+      titleBarOverlay: { height: TITLEBAR_HEIGHT, color: chromeFallbackFill(),
         symbolColor: nativeTheme.shouldUseDarkColors ? '#f9fafb' : '#0f1115' },
     } : {}),
     // hiddenInset places traffic lights inside the sidebar; sidebar vibrancy
@@ -298,7 +306,7 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
     if (['http:', 'https:'].includes(new URL(url).protocol)) void shell.openExternal(url)
     return { action: 'deny' }
   })
-  if (process.platform === 'darwin' || process.platform === 'win32') {
+  if (process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux') {
     // Fullscreen hides native window controls; overlays drop their caption clearance.
     const sendFullscreen = (): void => {
       if (!window.isDestroyed()) window.webContents.send(DESKTOP_IPC.windowFullscreen, window.isFullScreen())
@@ -1115,8 +1123,8 @@ async function main(): Promise<void> {
     ...(process.platform === 'win32' ? { icon: nativeImage.createFromPath(trayIconPath) } : {}),
   })
 
-  if (process.platform === 'win32') {
-    ipcMain.handle(DESKTOP_IPC.windowsMenu, (event, name: unknown, x: unknown, y: unknown) => {
+  if (process.platform === 'win32' || process.platform === 'linux') {
+    ipcMain.handle(DESKTOP_IPC.captionMenu, (event, name: unknown, x: unknown, y: unknown) => {
       assertDesktopSender(event, ['app'])
       if (mainWindow === undefined || event.sender !== mainWindow.webContents
         || event.senderFrame !== mainWindow.webContents.mainFrame) throw new Error('desktop menu: rejected sender')
@@ -1125,16 +1133,20 @@ async function main(): Promise<void> {
         || x < 0 || y < 0 || x > 100_000 || y > 100_000) throw new Error('desktop menu: invalid popup request')
       const window = mainWindow
       // Editor-owned history listens to key events rather than Chromium's native undo stack.
-      const editItem = (label: string, keyCode: string, modifiers: Array<'control'>, accelerator?: string): MenuItemConstructorOptions => ({
+      const editItem = (label: string, keyCode: string, modifiers: Array<'control' | 'shift'>, accelerator?: string): MenuItemConstructorOptions => ({
         label,
         ...(accelerator === undefined ? {} : { accelerator }),
         click: () => {
           shortcuts.sendEditingKey(keyCode, modifiers)
         },
       })
+      // Linux editors redo with Ctrl+Shift+Z; Windows keeps its Ctrl+Y convention.
+      const redo = process.platform === 'linux'
+        ? editItem(currentDesktopLocale().messages.redo, 'Z', ['control', 'shift'], 'Ctrl+Shift+Z')
+        : editItem(currentDesktopLocale().messages.redo, 'Y', ['control'], 'Ctrl+Y')
       const items: MenuItemConstructorOptions[] = name === 'application' ? applicationItems() : [
         editItem(currentDesktopLocale().messages.undo, 'Z', ['control'], 'Ctrl+Z'),
-        editItem(currentDesktopLocale().messages.redo, 'Y', ['control'], 'Ctrl+Y'),
+        redo,
         { type: 'separator' },
         editItem(currentDesktopLocale().messages.cut, 'X', ['control'], 'Ctrl+X'),
         editItem(currentDesktopLocale().messages.copy, 'C', ['control'], 'Ctrl+C'),
@@ -1148,7 +1160,7 @@ async function main(): Promise<void> {
         Menu.buildFromTemplate(items).popup({ window, x: Math.round(x * zoom), y: Math.round(y * zoom), callback: resolve })
       })
     })
-    ipcMain.on(DESKTOP_IPC.windowsAppearance, (event, _language: unknown, color: unknown, symbolColor: unknown) => {
+    ipcMain.on(DESKTOP_IPC.titleBarAppearance, (event, _language: unknown, color: unknown, symbolColor: unknown) => {
       if (mainWindow === undefined || event.sender !== mainWindow.webContents
         || event.senderFrame !== mainWindow.webContents.mainFrame) return
       if (!event.senderFrame.url.startsWith(`${SCHEME}://app/`)) return

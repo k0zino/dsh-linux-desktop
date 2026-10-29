@@ -100,7 +100,7 @@ describe('sidebar shell snapshots', () => {
   })
 
   it('renders Windows caption controls in expanded and collapsed states', async () => {
-    document.documentElement.setAttribute('data-windows-titlebar', '')
+    document.documentElement.setAttribute('data-desktop-titlebar', '')
     const { runtime } = await bench({ locale: 'en' })
     try {
       const slot = runtime.renderSlot('sidebar', { collapsed: false, width: 300 })
@@ -110,7 +110,7 @@ describe('sidebar shell snapshots', () => {
       expect(slot.container).toMatchSnapshot('windows collapsed')
     } finally {
       await runtime.dispose()
-      document.documentElement.removeAttribute('data-windows-titlebar')
+      document.documentElement.removeAttribute('data-desktop-titlebar')
     }
   })
 })

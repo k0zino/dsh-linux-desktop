@@ -410,10 +410,10 @@ it('wires the shell.leading controls to the shared sidebar actions', () => {
 })
 
 describe('Windows caption New Session analytics', () => {
-  afterEach(() => { document.documentElement.removeAttribute('data-windows-titlebar') })
+  afterEach(() => { document.documentElement.removeAttribute('data-desktop-titlebar') })
 
   it('reports the collapsed caption New Session as a titlebar click', () => {
-    document.documentElement.setAttribute('data-windows-titlebar', '')
+    document.documentElement.setAttribute('data-desktop-titlebar', '')
     const b = mountShell({ collapsed: true, width: 0 })
     fireEvent.click(screen.getByRole('button', { name: 'New session' }))
     expect(b.startSession).toHaveBeenCalledOnce()
@@ -421,7 +421,7 @@ describe('Windows caption New Session analytics', () => {
   })
 
   it('reports the expanded brand and New Session button as sidebar clicks', () => {
-    document.documentElement.setAttribute('data-windows-titlebar', '')
+    document.documentElement.setAttribute('data-desktop-titlebar', '')
     const b = mountShell()
     const starters = screen.getAllByRole('button', { name: 'New session' })
     expect(starters).toHaveLength(2)
@@ -435,7 +435,7 @@ describe('Windows caption New Session analytics', () => {
 })
 
 describe('Windows caption tooltips', () => {
-  afterEach(() => { document.documentElement.removeAttribute('data-windows-titlebar') })
+  afterEach(() => { document.documentElement.removeAttribute('data-desktop-titlebar') })
 
   const hover = (button: HTMLElement): void => {
     fireEvent.pointerEnter(button)
@@ -446,7 +446,7 @@ describe('Windows caption tooltips', () => {
     'drops the sidebar toggle bubble below the caption (collapsed=%s)',
     (collapsed) => {
       vi.useFakeTimers()
-      document.documentElement.setAttribute('data-windows-titlebar', '')
+      document.documentElement.setAttribute('data-desktop-titlebar', '')
       mountShell({ collapsed, width: collapsed ? 0 : 300 })
       hover(screen.getByRole('button', { name: collapsed ? 'Open sidebar' : 'Collapse sidebar' }))
       expect(screen.getByRole('tooltip').getAttribute('data-side')).toBe('bottom')
@@ -455,7 +455,7 @@ describe('Windows caption tooltips', () => {
 
   it('drops the collapsed New Session bubble below the caption as well', () => {
     vi.useFakeTimers()
-    document.documentElement.setAttribute('data-windows-titlebar', '')
+    document.documentElement.setAttribute('data-desktop-titlebar', '')
     mountShell({ collapsed: true, width: 0 })
     hover(screen.getByRole('button', { name: 'New session' }))
     expect(screen.getByRole('tooltip').getAttribute('data-side')).toBe('bottom')
