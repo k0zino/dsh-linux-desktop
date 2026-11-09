@@ -83,14 +83,14 @@ it('accepts only a displayed choice from its isolated shell frame', async () => 
   expect(dialogs!.isOpen).toBe(false)
 })
 
-it('attaches within its owner and resizes below the Windows caption without a native child window', async () => {
+it('attaches within its owner and resizes below the desktop caption without a native child window', async () => {
   const f = setup()
   const pending = f.show()
   const view = fixture.views[0]!
   expect(f.parent.contentView.addChildView).toHaveBeenCalledWith(view)
   expect(view.options).toMatchObject({ webPreferences: { preload: 'preload-update-dialog.cjs', sandbox: true, contextIsolation: true } })
   expect(view.setBackgroundColor).toHaveBeenCalledWith('#00000000')
-  const top = process.platform === 'win32' ? 40 : 0
+  const top = process.platform === 'win32' || process.platform === 'linux' ? 40 : 0
   expect(view.setBounds).toHaveBeenCalledWith({ x: 0, y: top, width: 900, height: 650 - top })
   f.parent.emit('resize')
   expect(view.setBounds).toHaveBeenCalledTimes(2)
@@ -213,4 +213,57 @@ it('reads the current locale and keeps technical diagnostics separate from ordin
     dialogs!.cancel()
     await pending
   }
+})
+
+
+it('keeps a reload action visible for at least half a second and prevents repeat responses', async () => {
+  vi.useFakeTimers()
+  const f = setup()
+  const run = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+  const pending = f.show(undefined, { action: { index: 0, run } })
+  const first = f.invoke(UPDATE_DIALOG_IPC.respond, 0)
+  expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ busyButton: 0 })
+  f.invoke(UPDATE_DIALOG_IPC.respond, 0)
+  expect(run).toHaveBeenCalledTimes(1)
+  await vi.advanceTimersByTimeAsync(499)
+  expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ busyButton: 0 })
+  await vi.advanceTimersByTimeAsync(1)
+  await first
+  expect(dialogs!.isOpen).toBe(true)
+  expect(f.invoke(UPDATE_DIALOG_IPC.status)).not.toHaveProperty('busyButton')
+  const second = f.invoke(UPDATE_DIALOG_IPC.respond, 0)
+  await vi.advanceTimersByTimeAsync(500)
+  await second
+  expect(await pending).toMatchObject({ response: 0 })
+})
+
+it('does not revive a busy prompt after cancellation', async () => {
+  vi.useFakeTimers()
+  const f = setup()
+  const action = Promise.withResolvers<boolean>()
+  const pending = f.show(undefined, { action: { index: 0, run: () => action.promise } })
+  const responding = f.invoke(UPDATE_DIALOG_IPC.respond, 0)
+  dialogs!.cancel()
+  action.resolve(false)
+  await vi.advanceTimersByTimeAsync(500)
+  await responding
+  expect(await pending).toMatchObject({ response: 1 })
+  expect(dialogs!.isOpen).toBe(false)
+})
+
+it('keeps the same dialog open after revealing a settings file', async () => {
+  const f = setup()
+  const reveal = vi.fn()
+  const pending = f.show(undefined, { buttons: ['Reload', 'Show file', 'Close'], cancelId: 2,
+    keepOpenAction: { index: 1, run: reveal } })
+  const before = f.invoke(UPDATE_DIALOG_IPC.status) as { revision: number }
+  await f.invoke(UPDATE_DIALOG_IPC.respond, 1)
+  expect(reveal).toHaveBeenCalledOnce()
+  expect((f.invoke(UPDATE_DIALOG_IPC.status) as { revision: number }).revision).toBe(before.revision + 1)
+  expect(f.invoke(UPDATE_DIALOG_IPC.status)).not.toEqual(before)
+  await f.invoke(UPDATE_DIALOG_IPC.respond, 1)
+  expect(reveal).toHaveBeenCalledTimes(2)
+  expect(dialogs!.isOpen).toBe(true)
+  await f.invoke(UPDATE_DIALOG_IPC.respond, 2)
+  expect(await pending).toMatchObject({ response: 2 })
 })

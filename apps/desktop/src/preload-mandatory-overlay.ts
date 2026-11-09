@@ -61,7 +61,7 @@ export function installMandatoryUpdateOverlay(): void {
   }
   const blockBackgroundKey = (event: KeyboardEvent): void => {
     if (frame === undefined || state?.policy.blocking !== true
-      || event.composedPath().some(target => target instanceof HTMLElement && target.hasAttribute('data-windows-menu'))) return
+      || event.composedPath().some(target => target instanceof HTMLElement && target.hasAttribute('data-caption-menu'))) return
     event.preventDefault()
     event.stopImmediatePropagation()
     frame.focus()

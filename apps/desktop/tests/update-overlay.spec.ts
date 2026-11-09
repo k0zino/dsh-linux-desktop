@@ -42,9 +42,9 @@ it('never shows or activates its native owner on visibility or background loadin
   overlay.destroy()
 })
 
-it.each(['darwin', 'win32'] as const)('fits inside the owner with native caption clearance on %s', (platform) => {
+it.each(['darwin', 'win32', 'linux'] as const)('fits inside the owner with native caption clearance on %s', (platform) => {
   vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
-  const f = fixture(); const overlay = f.create(); const top = platform === 'win32' ? 40 : 0
+  const f = fixture(); const overlay = f.create(); const top = platform === 'win32' || platform === 'linux' ? 40 : 0
   expect(f.views[0]!.setBounds).toHaveBeenCalledWith({ x: 0, y: top, width: 900, height: 650 - top })
   f.parent.emit('resize'); expect(f.views[0]!.setBounds).toHaveBeenCalledTimes(2)
   overlay.destroy()

@@ -22,7 +22,7 @@ afterEach(() => {
 })
 
 function setup() {
-  dom = new JSDOM('<html><body><button>Product action</button><div data-windows-menu></div></body></html>', { url: 'dsh-app://app/' })
+  dom = new JSDOM('<html><body><button>Product action</button><div data-caption-menu></div></body></html>', { url: 'dsh-app://app/' })
   vi.stubGlobal('window', dom.window)
   vi.stubGlobal('document', dom.window.document)
   vi.stubGlobal('HTMLElement', dom.window.HTMLElement)
@@ -73,7 +73,7 @@ it('rejects forged window events and accepts actions only through the transferre
 
 it('keeps caption menu keyboard events available while blocking background shortcuts', () => {
   const f = setup()
-  const host = dom.window.document.querySelector('[data-windows-menu]')!
+  const host = dom.window.document.querySelector('[data-caption-menu]')!
   const shadow = host.attachShadow({ mode: 'open' })
   const button = dom.window.document.createElement('button')
   shadow.append(button)

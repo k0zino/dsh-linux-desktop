@@ -1,4 +1,4 @@
-import { WINDOWS_TITLEBAR_HEIGHT } from '../../lib/types/windows-layout.js'
+import { TITLEBAR_HEIGHT } from '../../lib/types/titlebar-layout.js'
 /** Real Electron main entry, preload, shared Web Host, and local updater; no installer executes. */
 import { mandatoryFrameDriver } from './mandatory-frame.mjs'
 import assert from 'node:assert/strict'
@@ -10,7 +10,7 @@ import { app, BrowserWindow, Menu, webContents } from 'electron'
 import updaterModule from 'electron-updater'
 import { createUpdateServer } from './update-server.mjs'
 import { fixture } from './workspace-update-adapters.mjs'
-import { DesktopUpdateHttpExecutor } from '../../lib/types/update-http-executor.js'
+import { DesktopUpdateHttpExecutor } from '../../lib/types/updates/electron-updater/http-executor.js'
 import { desktopUpdateReadyConfirmation, resolveDesktopLocale } from '../../lib/types/locale.js'
 
 const root = process.env.DSH_WORKSPACE_UPDATE_ROOT
@@ -212,7 +212,7 @@ async function qualify() {
       const popup = Menu.prototype.popup
       try {
         Menu.prototype.popup = function (options) { menu = this.items; options.callback?.() }
-        await mainWindow.webContents.executeJavaScript("document.querySelector('[data-windows-menu]').shadowRoot.querySelector('button').click()")
+        await mainWindow.webContents.executeJavaScript("document.querySelector('[data-caption-menu]').shadowRoot.querySelector('button').click()")
         await waitFor(() => menu !== undefined, 'Windows application menu')
       } finally { Menu.prototype.popup = popup }
     } else menu = Menu.getApplicationMenu().items[0].submenu.items
@@ -313,7 +313,7 @@ async function qualify() {
     if (process.platform === 'win32') {
       const viewport = await mandatory.webContents.executeJavaScript('({ width: innerWidth, height: innerHeight })')
       const bounds = mainWindow.getContentBounds()
-      assert.deepEqual(viewport, { width: bounds.width, height: bounds.height - WINDOWS_TITLEBAR_HEIGHT })
+      assert.deepEqual(viewport, { width: bounds.width, height: bounds.height - TITLEBAR_HEIGHT })
     }
     mandatory.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' })
     mandatory.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' })

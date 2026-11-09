@@ -1,4 +1,4 @@
-import { WINDOWS_TITLEBAR_HEIGHT } from '../../lib/types/windows-layout.js'
+import { TITLEBAR_HEIGHT } from '../../lib/types/titlebar-layout.js'
 import { setTimeout as delay } from 'node:timers/promises'
 
 export async function mandatoryFrame(parent) {
@@ -20,7 +20,7 @@ export async function mandatoryFrameDriver(parent) {
       if (typeof event.y !== 'number') return target.sendInputEvent(event)
       return target.debugger.sendCommand('Input.dispatchMouseEvent', {
         type: event.type === 'mouseDown' ? 'mousePressed' : event.type === 'mouseUp' ? 'mouseReleased' : 'mouseMoved',
-        x: event.x, y: event.y + WINDOWS_TITLEBAR_HEIGHT, button: event.button ?? 'none', clickCount: event.clickCount ?? 0,
+        x: event.x, y: event.y + TITLEBAR_HEIGHT, button: event.button ?? 'none', clickCount: event.clickCount ?? 0,
       })
     }
     const value = Reflect.get(target, key)
