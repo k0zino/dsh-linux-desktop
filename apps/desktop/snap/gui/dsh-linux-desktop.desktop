@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=DeepSeek Harness Linux
+Comment=Community Linux desktop build of DeepSeek Harness
+Exec=dsh-linux-desktop %U
+Icon=${SNAP}/meta/gui/dsh-linux-desktop.png
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=deepseek-harness

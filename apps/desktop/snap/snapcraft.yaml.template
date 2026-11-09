@@ -1,0 +1,109 @@
+name: dsh-linux-desktop
+title: DeepSeek Harness Linux
+summary: Community Linux desktop build of DeepSeek Harness
+description: |
+  Community-maintained Linux x64 desktop build of DeepSeek Harness.
+
+  This is an independent community package and is not an official
+  DeepSeek product. DeepSeek Harness is developed by DeepSeek AI.
+version: __VERSION__
+base: core26
+confinement: strict
+grade: stable
+license: MIT
+contact: https://github.com/k0zino/dsh-linux-desktop/issues
+issues: https://github.com/k0zino/dsh-linux-desktop/issues
+source-code: https://github.com/k0zino/dsh-linux-desktop
+website: https://github.com/k0zino/dsh-linux-desktop
+icon: snap/gui/dsh-linux-desktop.png
+environment:
+  LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
+  XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+apps:
+  dsh-linux-desktop:
+    command: command.sh
+    plugs:
+      - desktop
+      - desktop-legacy
+      - home
+      - x11
+      - wayland
+      - unity7
+      - network
+      - gsettings
+      - audio-playback
+      - pulseaudio
+      - opengl
+      - browser-support
+parts:
+  app:
+    plugin: dump
+    source: .
+    stage:
+      - app
+      - command.sh
+      - etc
+      - usr
+    stage-packages:
+      - ca-certificates
+      - curl
+      - findutils
+      - git
+      - libappindicator3-1
+      - libasound2t64
+      - libatk1.0-0t64
+      - libatk-bridge2.0-0t64
+      - libatspi2.0-0t64
+      - libavahi-client3
+      - libavahi-common3
+      - libcairo-gobject2
+      - libcairo2
+      - libcups2t64
+      - libdatrie1
+      - libepoxy0
+      - libfontconfig1
+      - libfribidi0
+      - libgbm1
+      - libgdk-pixbuf-2.0-0
+      - libglycin-2-0
+      - libgraphite2-3
+      - libgtk-3-0t64
+      - libharfbuzz0b
+      - liblcms2-2
+      - libnotify4
+      - libnspr4
+      - libnss3
+      - libpango-1.0-0
+      - libpangocairo-1.0-0
+      - libpangoft2-1.0-0
+      - libpixman-1-0
+      - libsecret-1-0
+      - libthai0
+      - libwayland-client0
+      - libwayland-cursor0
+      - libwayland-egl1
+      - libx11-6
+      - libxau6
+      - libxcb-render0
+      - libxcb-shm0
+      - libxcb1
+      - libxcomposite1
+      - libxcursor1
+      - libxdamage1
+      - libxdmcp6
+      - libxext6
+      - libxfixes3
+      - libxi6
+      - libxinerama1
+      - libxrandr2
+      - libxrender1
+      - libxres1
+      - libxss1
+      - libxtst6
+      - openssh-client
+      - procps
+      - psmisc
+      - unzip
+      - wget
+      - xz-utils
+      - zip
