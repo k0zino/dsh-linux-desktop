@@ -1,6 +1,6 @@
 pkgbase = deepseek-harness-desktop-bin
 	pkgdesc = Desktop shell for the DeepSeek Harness agent runtime (fixed Linux x64 build)
-	pkgver = 0.2.2alpha.2
+	pkgver = 0.2.2rc.1
 	pkgrel = 1
 	url = https://github.com/k0zino/dsh-linux-desktop
 	arch = x86_64
@@ -27,12 +27,12 @@ pkgbase = deepseek-harness-desktop-bin
 	optdepends = libappindicator-gtk3: system tray icon support
 	provides = deepseek-harness-desktop
 	conflicts = deepseek-harness-desktop
-	noextract = deepseek-harness-0.2.2-alpha.2-linux-x64.pacman
+	noextract = deepseek-harness-0.2.2-rc.1-linux-x64.pacman
 	options = !strip
 	options = !debug
-	source = deepseek-harness-0.2.2-alpha.2-linux-x64.pacman::https://github.com/k0zino/dsh-linux-desktop/releases/download/v0.2.2-alpha.2-linux.1/deepseek-harness-0.2.2-alpha.2-linux-x64.pacman
+	source = deepseek-harness-0.2.2-rc.1-linux-x64.pacman::https://github.com/k0zino/dsh-linux-desktop/releases/download/v0.2.2-rc.1-linux.1/deepseek-harness-0.2.2-rc.1-linux-x64.pacman
 	source = LICENSE::https://raw.githubusercontent.com/k0zino/dsh-linux-desktop/master/LICENSE
-	sha256sums = 1e55846f76f609cbeb1ce9246363ad325577d3fdddc3aa309980400989866639
+	sha256sums = 0b4bc0bd92c846ad324fbd47d5be2718ad4571652a2a6b63c7839b63d74c68c7
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
 pkgname = deepseek-harness-desktop-bin

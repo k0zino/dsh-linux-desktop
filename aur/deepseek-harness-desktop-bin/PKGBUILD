@@ -4,7 +4,7 @@
 # integration that unpatched upstream builds lack.
 
 pkgname=deepseek-harness-desktop-bin
-_pkgver=0.2.2-alpha.2
+_pkgver=0.2.2-rc.1
 _tag="v${_pkgver}-linux.1"
 pkgver=${_pkgver//-/}
 pkgrel=1
@@ -23,7 +23,7 @@ _pacman="deepseek-harness-${_pkgver}-linux-x64.pacman"
 source=("${_pacman}::${url}/releases/download/${_tag}/${_pacman}"
         "LICENSE::https://raw.githubusercontent.com/k0zino/dsh-linux-desktop/master/LICENSE")
 noextract=("${_pacman}")
-sha256sums=('1e55846f76f609cbeb1ce9246363ad325577d3fdddc3aa309980400989866639'
+sha256sums=('0b4bc0bd92c846ad324fbd47d5be2718ad4571652a2a6b63c7839b63d74c68c7'
             'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
 
 package() {
