@@ -17,6 +17,9 @@ source-code: https://github.com/k0zino/dsh-linux-desktop
 website: https://github.com/k0zino/dsh-linux-desktop
 icon: snap/gui/deepseek-harness-linux.png
 environment:
+  FONTCONFIG_FILE: $SNAP/etc/fonts/fonts.conf
+  FONTCONFIG_PATH: $SNAP/etc/fonts
+  GSETTINGS_SCHEMA_DIR: $SNAP/usr/share/glib-2.0/schemas
   LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
   XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
   XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
@@ -45,10 +48,28 @@ parts:
       - command.sh
       - etc
       - usr
+    override-prime: |
+      craftctl default
+      glib-compile-schemas "$CRAFT_PRIME/usr/share/glib-2.0/schemas"
+      cat > "$CRAFT_PRIME/etc/fonts/conf.d/99-dsh-sans.conf" <<'EOF'
+      <?xml version="1.0"?>
+      <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+      <fontconfig>
+        <match target="pattern">
+          <test qual="any" name="family"><string>sans-serif</string></test>
+          <edit name="family" mode="prepend" binding="strong">
+            <string>Noto Sans CJK SC</string>
+            <string>Noto Sans</string>
+            <string>DejaVu Sans</string>
+          </edit>
+        </match>
+      </fontconfig>
+      EOF
     stage-packages:
       - ca-certificates
       - curl
       - findutils
+      - fonts-noto-cjk
       - git
       - libappindicator3-1
       - libasound2t64
@@ -61,11 +82,17 @@ parts:
       - libcairo2
       - libcups2t64
       - libdatrie1
+      - libegl1
+      - libegl-mesa0
       - libepoxy0
       - libfontconfig1
       - libfribidi0
       - libgbm1
+      - libgdk-pixbuf2.0-bin
+      - libgl1
       - libgl1-mesa-dri
+      - libgles2
+      - libglx-mesa0
       - libgdk-pixbuf-2.0-0
       - libglycin-2-0
       - libgraphite2-3
@@ -100,6 +127,7 @@ parts:
       - libxrandr2
       - libxrender1
       - libxres1
+      - libvulkan1
       - libxss1
       - libxtst6
       - openssh-client
