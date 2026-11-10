@@ -19,6 +19,7 @@ icon: snap/gui/deepseek-harness-linux.png
 environment:
   LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
   XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+  XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
 apps:
   deepseek-harness-linux:
     command: command.sh
@@ -106,5 +107,6 @@ parts:
       - psmisc
       - unzip
       - wget
+      - xkb-data
       - xz-utils
       - zip
