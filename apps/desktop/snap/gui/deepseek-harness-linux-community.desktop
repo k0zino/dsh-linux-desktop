@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=DeepSeek Harness Linux
 Comment=Community Linux desktop build of DeepSeek Harness
-Exec=deepseek-harness-linux %U
-Icon=${SNAP}/meta/gui/deepseek-harness-linux.png
+Exec=deepseek-harness-linux-community %U
+Icon=${SNAP}/meta/gui/deepseek-harness-linux-community.png
 Terminal=false
 Type=Application
 Categories=Development;

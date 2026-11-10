@@ -1,4 +1,4 @@
-name: deepseek-harness-linux
+name: deepseek-harness-linux-community
 title: DeepSeek Harness Linux
 summary: Community Linux desktop build of DeepSeek Harness
 description: |
@@ -15,9 +15,9 @@ contact: https://github.com/k0zino/dsh-linux-desktop/issues
 issues: https://github.com/k0zino/dsh-linux-desktop/issues
 source-code: https://github.com/k0zino/dsh-linux-desktop
 website: https://github.com/k0zino/dsh-linux-desktop
-icon: snap/gui/deepseek-harness-linux.png
+icon: snap/gui/deepseek-harness-linux-community.png
 apps:
-  deepseek-harness-linux:
+  deepseek-harness-linux-community:
     command: command.sh
 parts:
   app:

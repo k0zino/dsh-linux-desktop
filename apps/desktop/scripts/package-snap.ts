@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { desktopTargetBuildPaths } from './desktop-build-paths.mjs'
 
 const APP_ROOT = fileURLToPath(new URL('..', import.meta.url))
-const SNAP_NAME = 'deepseek-harness-linux'
+const SNAP_NAME = 'deepseek-harness-linux-community'
 const TARGET = 'linux-x64' as const
 
 const paths = desktopTargetBuildPaths(TARGET)
@@ -29,8 +29,8 @@ rmSync(join(appRoot, 'chrome-sandbox'), { force: true })
 
 cpSync(join(APP_ROOT, 'snap', 'command.sh'), join(buildRoot, 'command.sh'))
 chmodSync(join(buildRoot, 'command.sh'), 0o755)
-cpSync(join(APP_ROOT, 'snap', 'gui', 'deepseek-harness-linux.desktop'), join(guiRoot, 'deepseek-harness-linux.desktop'))
-cpSync(join(APP_ROOT, 'resources', 'icons', '256x256.png'), join(guiRoot, 'deepseek-harness-linux.png'))
+cpSync(join(APP_ROOT, 'snap', 'gui', 'deepseek-harness-linux-community.desktop'), join(guiRoot, 'deepseek-harness-linux-community.desktop'))
+cpSync(join(APP_ROOT, 'resources', 'icons', '256x256.png'), join(guiRoot, 'deepseek-harness-linux-community.png'))
 
 const manifest = readFileSync(join(APP_ROOT, 'snap', 'snapcraft.yaml.template'), 'utf8')
   .replaceAll('__VERSION__', product.version)
