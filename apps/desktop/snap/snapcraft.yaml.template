@@ -64,6 +64,7 @@ parts:
       - libfontconfig1
       - libfribidi0
       - libgbm1
+      - libgl1-mesa-dri
       - libgdk-pixbuf-2.0-0
       - libglycin-2-0
       - libgraphite2-3
