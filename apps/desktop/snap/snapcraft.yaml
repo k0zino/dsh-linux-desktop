@@ -6,7 +6,7 @@ description: |
 
   This is an independent community package and is not an official
   DeepSeek product. DeepSeek Harness is developed by DeepSeek AI.
-version: __VERSION__
+version: 0.2.2-rc.1
 base: core26
 confinement: classic
 grade: stable
