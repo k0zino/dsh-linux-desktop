@@ -7,6 +7,7 @@ export GSETTINGS_SCHEMA_DIR="${GSETTINGS_SCHEMA_DIR:-$SNAP/usr/share/glib-2.0/sc
 export XKB_CONFIG_ROOT="${XKB_CONFIG_ROOT:-$SNAP/usr/share/X11/xkb}"
 export GBM_BACKENDS_PATH="${GBM_BACKENDS_PATH:-$SNAP/usr/lib/x86_64-linux-gnu/gbm}"
 export LIBGL_DRIVERS_PATH="${LIBGL_DRIVERS_PATH:-$SNAP/usr/lib/x86_64-linux-gnu/dri:$SNAP/usr/lib/x86_64-linux-gnu/gbm}"
+export GTK_THEME="${GTK_THEME:-Adwaita}"
 
 # Snapd keeps XDG_RUNTIME_DIR private. Expose the host Wayland socket the same
 # way the desktop-launch helpers do, then prefer Wayland when it is reachable.
@@ -23,24 +24,35 @@ if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ]; then
   esac
 fi
 
-# GDK needs a loader cache whose paths point into this snap revision.
+# GDK needs a loader cache whose paths point into this snap revision. Generate
+# it once per snap revision and reuse it on later launches.
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$SNAP_USER_COMMON/.cache}"
 mkdir -p "$XDG_CACHE_HOME"
 if [ -d "$SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders" ]; then
   export GDK_PIXBUF_MODULEDIR="$SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders"
-  export GDK_PIXBUF_MODULE_FILE="$XDG_CACHE_HOME/gdk-pixbuf-loaders.cache"
-  if [ -x "$SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders" ]; then
+  export GDK_PIXBUF_MODULE_FILE="$XDG_CACHE_HOME/gdk-pixbuf-loaders-$SNAP_REVISION.cache"
+  if [ ! -f "$GDK_PIXBUF_MODULE_FILE" ] && [ -x "$SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders" ]; then
     "$SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders" > "$GDK_PIXBUF_MODULE_FILE" 2>/dev/null || true
   fi
 fi
 
-if [ "${DISABLE_WAYLAND:-}" = "1" ] && [ -n "${DISPLAY:-}" ]; then
-  exec "$SNAP/app/deepseek-harness" --no-sandbox --ozone-platform=x11 "$@"
+# The snap cannot use the host NVIDIA driver. Software rendering avoids the
+# repeated EGL/ANGLE initialization stalls; opt back in with DSH_SNAP_ENABLE_GPU=1.
+gpu_flag="--disable-gpu"
+if [ "${DSH_SNAP_ENABLE_GPU:-}" = "1" ]; then
+  gpu_flag=""
 fi
-if [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && [ -S "$XDG_RUNTIME_DIR/${WAYLAND_DISPLAY:-wayland-0}" ]; then
-  exec "$SNAP/app/deepseek-harness" --no-sandbox --ozone-platform=wayland "$@"
+
+# Electron's client-side caption works reliably on X11; use Wayland only when
+# explicitly requested (DSH_SNAP_WAYLAND=1) or when no X11 display is present.
+if [ "${DISABLE_WAYLAND:-}" != "1" ] && [ "${DSH_SNAP_WAYLAND:-}" = "1" ] \
+  && [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && [ -S "$XDG_RUNTIME_DIR/${WAYLAND_DISPLAY:-wayland-0}" ]; then
+  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=wayland "$@"
 fi
 if [ -n "${DISPLAY:-}" ]; then
-  exec "$SNAP/app/deepseek-harness" --no-sandbox --ozone-platform=x11 "$@"
+  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=x11 "$@"
 fi
-exec "$SNAP/app/deepseek-harness" --no-sandbox "$@"
+if [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && [ -S "$XDG_RUNTIME_DIR/${WAYLAND_DISPLAY:-wayland-0}" ]; then
+  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=wayland "$@"
+fi
+exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag "$@"
