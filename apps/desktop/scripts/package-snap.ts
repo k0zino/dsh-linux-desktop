@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { desktopTargetBuildPaths } from './desktop-build-paths.mjs'
 
 const APP_ROOT = fileURLToPath(new URL('..', import.meta.url))
-const SNAP_NAME = 'dsh-linux-desktop'
+const SNAP_NAME = 'deepseek-harness-linux'
 const TARGET = 'linux-x64' as const
 
 const paths = desktopTargetBuildPaths(TARGET)
@@ -29,8 +29,8 @@ rmSync(join(appRoot, 'chrome-sandbox'), { force: true })
 
 cpSync(join(APP_ROOT, 'snap', 'command.sh'), join(buildRoot, 'command.sh'))
 chmodSync(join(buildRoot, 'command.sh'), 0o755)
-cpSync(join(APP_ROOT, 'snap', 'gui', 'dsh-linux-desktop.desktop'), join(guiRoot, 'dsh-linux-desktop.desktop'))
-cpSync(join(APP_ROOT, 'resources', 'icons', '256x256.png'), join(guiRoot, 'dsh-linux-desktop.png'))
+cpSync(join(APP_ROOT, 'snap', 'gui', 'deepseek-harness-linux.desktop'), join(guiRoot, 'deepseek-harness-linux.desktop'))
+cpSync(join(APP_ROOT, 'resources', 'icons', '256x256.png'), join(guiRoot, 'deepseek-harness-linux.png'))
 
 const manifest = readFileSync(join(APP_ROOT, 'snap', 'snapcraft.yaml.template'), 'utf8')
   .replaceAll('__VERSION__', product.version)
@@ -38,6 +38,9 @@ writeFileSync(join(snapRoot, 'snapcraft.yaml'), manifest)
 
 const output = join(buildRoot, 'dist')
 mkdirSync(output, { recursive: true })
+for (const name of readdirSync(output)) {
+  if (name.startsWith(`${SNAP_NAME}_`) && name.endsWith('.snap')) rmSync(join(output, name), { force: true })
+}
 const result = spawnSync('snapcraft', ['pack', '--destructive-mode', '--output', output], {
   cwd: buildRoot,
   env: { ...process.env, SNAPCRAFT_BUILD_ENVIRONMENT: 'host' },

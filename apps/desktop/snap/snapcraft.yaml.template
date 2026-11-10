@@ -1,4 +1,4 @@
-name: dsh-linux-desktop
+name: deepseek-harness-linux
 title: DeepSeek Harness Linux
 summary: Community Linux desktop build of DeepSeek Harness
 description: |
@@ -15,12 +15,12 @@ contact: https://github.com/k0zino/dsh-linux-desktop/issues
 issues: https://github.com/k0zino/dsh-linux-desktop/issues
 source-code: https://github.com/k0zino/dsh-linux-desktop
 website: https://github.com/k0zino/dsh-linux-desktop
-icon: snap/gui/dsh-linux-desktop.png
+icon: snap/gui/deepseek-harness-linux.png
 environment:
   LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
   XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
 apps:
-  dsh-linux-desktop:
+  deepseek-harness-linux:
     command: command.sh
     plugs:
       - desktop
