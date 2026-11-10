@@ -43,16 +43,13 @@ if [ "${DSH_SNAP_ENABLE_GPU:-}" = "1" ]; then
   gpu_flag=""
 fi
 
-# Electron's client-side caption works reliably on X11; use Wayland only when
-# explicitly requested (DSH_SNAP_WAYLAND=1) or when no X11 display is present.
-if [ "${DISABLE_WAYLAND:-}" != "1" ] && [ "${DSH_SNAP_WAYLAND:-}" = "1" ] \
+# Prefer native Wayland. DISABLE_WAYLAND=1 forces XWayland for troubleshooting.
+if [ "${DISABLE_WAYLAND:-}" != "1" ] \
   && [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && [ -S "$XDG_RUNTIME_DIR/${WAYLAND_DISPLAY:-wayland-0}" ]; then
-  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=wayland "$@"
+  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag \
+    --ozone-platform=wayland --enable-features=WaylandWindowDecorations "$@"
 fi
 if [ -n "${DISPLAY:-}" ]; then
   exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=x11 "$@"
-fi
-if [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && [ -S "$XDG_RUNTIME_DIR/${WAYLAND_DISPLAY:-wayland-0}" ]; then
-  exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag --ozone-platform=wayland "$@"
 fi
 exec "$SNAP/app/deepseek-harness" --no-sandbox $gpu_flag "$@"

@@ -21,7 +21,7 @@ environment:
   FONTCONFIG_PATH: $SNAP/etc/fonts
   GSETTINGS_SCHEMA_DIR: $SNAP/usr/share/glib-2.0/schemas
   LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
-  XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+  XDG_DATA_DIRS: $SNAP/usr/share:$SNAP/data-dir:$XDG_DATA_DIRS
   XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
 apps:
   deepseek-harness-linux:
@@ -39,6 +39,22 @@ apps:
       - pulseaudio
       - opengl
       - browser-support
+      - gtk-3-themes
+      - icon-themes
+      - sound-themes
+plugs:
+  gtk-3-themes:
+    interface: content
+    target: $SNAP/data-dir/themes
+    default-provider: gtk-common-themes
+  icon-themes:
+    interface: content
+    target: $SNAP/data-dir/icons
+    default-provider: gtk-common-themes
+  sound-themes:
+    interface: content
+    target: $SNAP/data-dir/sounds
+    default-provider: gtk-common-themes
 parts:
   app:
     plugin: dump
