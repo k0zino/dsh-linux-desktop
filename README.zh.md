@@ -17,6 +17,20 @@
 
 安装后应用名为 **DeepSeek Harness**，桌面环境中可直接从启动器打开（含完整的多尺寸图标）。
 
+### APT 源（Debian / Ubuntu，自动更新）
+
+滚动 `apt` GitHub Release 同时托管一个带签名的 APT 仓库。添加一次后，后续 Linux 构建可以通过 `apt upgrade` 升级：
+
+```bash
+sudo install -d -m 0755 /etc/apt/keyrings
+sudo curl -fsSL https://github.com/k0zino/dsh-linux-desktop/releases/download/apt/dsh-archive-keyring.gpg -o /etc/apt/keyrings/dsh-archive-keyring.gpg
+echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/dsh-archive-keyring.gpg] https://github.com/k0zino/dsh-linux-desktop/releases/download/apt ./' | sudo tee /etc/apt/sources.list.d/dsh-linux-desktop.list
+sudo apt update
+sudo apt install deepseek-harness
+```
+
+仓库当前提供 `amd64` 包，并跟随所有已发布的 Linux 版本，包括预发布版。添加源后第一次 `apt upgrade` 会把已有的本地 `.deb` 安装切换到带修订号的仓库版本。Linux 构建没有应用内更新 feed，Debian/Ubuntu 用户请使用 APT 更新。
+
 ## 从源码构建
 
 环境要求：
@@ -60,7 +74,7 @@ pnpm --dir apps/desktop run package:linux:x64
 ## 已知限制
 
 - 仅 `linux-x64`;ARM64 Linux 未做（上游引擎包和 Electron 目标都需额外适配）。
-- Linux 构建为本地构建：不做代码签名，不含自动更新 feed。
+- Linux 构建为本地构建：不做代码签名，不含应用内自动更新 feed。Debian/Ubuntu 用户可订阅 APT 源；其他格式需手动更新。
 - 仅测试于 glibc 发行版；musl(Alpine 等）未覆盖。
 
 ## 协议

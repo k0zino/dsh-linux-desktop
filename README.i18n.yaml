@@ -8,6 +8,9 @@
 /dsh-linux-desktop/installation:
   en: 02a708d9dcc4fa0b
   zh: 23efd20b4ab4a681
+/dsh-linux-desktop/installation/apt-repository-debian-ubuntu-automatic-updates:
+  en: 609e70bddce1e049
+  zh: 7dfdd4ce995b68ea
 /dsh-linux-desktop/build-from-source:
   en: 4920b638744dcd65
   zh: d6caeeecf9a67d2b
@@ -15,8 +18,8 @@
   en: 9e91fb812ec8e8ad
   zh: df166b472a399b40
 /dsh-linux-desktop/known-limitations:
-  en: 183d3f4a14d88401
-  zh: b1822ab0a51e6374
+  en: 7431f927238b4251
+  zh: 572abbe758b224c8
 /dsh-linux-desktop/license:
   en: 4b93fa0f6d2843e0
   zh: ce6d01e784ca997b

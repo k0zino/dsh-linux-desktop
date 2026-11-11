@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write apt/README.md
+/apt-repository:
+  en: 3a7cda6e35a69da0
+  zh: 5fe9a84487ce9904
+/apt-repository/layout:
+  en: dd23ac106d7cc3db
+  zh: 88c2a306098e276e
+/apt-repository/publishing:
+  en: 7dfb58b7b54abf11
+  zh: b31c8d023c92f28e
+/apt-repository/signing-key:
+  en: 58dd8656db717174
+  zh: ffd06be1c11ae987
+/apt-repository/local-dry-run:
+  en: 79452dafa16269bf
+  zh: 5934e486cb424bcc
+/apt-repository/verification:
+  en: 9824cb56a2449a07
+  zh: eba18e64c9b782e6
+/apt-repository/recovery:
+  en: 61d5b003111550fc
+  zh: 919ed6d2e6b81757
+/apt-repository/security:
+  en: 750d8c349d2dd3e6
+  zh: 6242c32fb5843952

@@ -1,0 +1,89 @@
+# Publish the rolling APT repository from a GitHub Release. The workflow runs
+# automatically when a release is published and can be dispatched manually for
+# backfills or retries. It skips the rolling `apt` release itself so publishing
+# the repository cannot trigger another publication.
+name: Publish APT repository
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag containing the .deb, for example v0.2.2-rc.1-linux.1'
+        type: string
+        required: true
+      apt_tag:
+        description: 'Rolling release tag that hosts the APT index'
+        type: string
+        required: true
+        default: 'apt'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apt-repository
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.repository == 'k0zino/dsh-linux-desktop'
+      && (github.event_name == 'workflow_dispatch'
+        || (vars.APT_GPG_KEY_ID
+          && github.event.release.tag_name != 'apt'
+          && contains(github.event.release.tag_name, '-linux.')))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
+      APT_TAG: ${{ inputs.apt_tag || 'apt' }}
+      APT_REPO_SIGNING: ${{ vars.APT_REPO_SIGNING || 'true' }}
+      APT_GPG_KEY_ID: ${{ vars.APT_GPG_KEY_ID }}
+    steps:
+      # Release events check out the release tag by default. The publisher must
+      # come from the default branch so an older release tag cannot run an old
+      # version of the script.
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install APT index tooling
+        run: |
+          if ! command -v apt-ftparchive >/dev/null 2>&1; then
+            sudo apt-get update -q
+            sudo apt-get install -yq apt-utils
+          fi
+
+      - name: Check signing configuration
+        if: env.APT_REPO_SIGNING != 'false'
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APT_GPG_PRIVATE_KEY" ]; then
+            echo "::error::APT_GPG_PRIVATE_KEY is not configured; follow apt/README.md or set APT_REPO_SIGNING=false for an unsigned test."
+            exit 1
+          fi
+          if [ -z "$APT_GPG_KEY_ID" ]; then
+            echo "::error::APT_GPG_KEY_ID is not configured."
+            exit 1
+          fi
+          printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Publish
+        env:
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          args=(--release-tag "$RELEASE_TAG" --apt-tag "$APT_TAG" --repo "$GITHUB_REPOSITORY")
+          if [ "$APT_REPO_SIGNING" = "false" ]; then
+            args+=(--unsigned)
+          fi
+          node apt/publish.mjs "${args[@]}"

@@ -17,6 +17,20 @@ Pick a format from the [Releases](https://github.com/k0zino/dsh-linux-desktop/re
 
 Once installed the app is named **DeepSeek Harness** and can be launched from the desktop environment's launcher (with a full multi-size icon set).
 
+### APT repository (Debian / Ubuntu, automatic updates)
+
+The rolling `apt` GitHub Release also serves a signed APT repository. Add it once to receive later Linux builds through `apt upgrade`:
+
+```bash
+sudo install -d -m 0755 /etc/apt/keyrings
+sudo curl -fsSL https://github.com/k0zino/dsh-linux-desktop/releases/download/apt/dsh-archive-keyring.gpg -o /etc/apt/keyrings/dsh-archive-keyring.gpg
+echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/dsh-archive-keyring.gpg] https://github.com/k0zino/dsh-linux-desktop/releases/download/apt ./' | sudo tee /etc/apt/sources.list.d/dsh-linux-desktop.list
+sudo apt update
+sudo apt install deepseek-harness
+```
+
+The repository currently carries `amd64` packages and follows every published Linux release, including prereleases. The first `apt upgrade` after adding the repository also switches an existing local `.deb` installation to the repository's revisioned package. Linux builds have no in-app update feed, so Debian/Ubuntu users should update with `apt`.
+
 ## Build from source
 
 Requirements:
@@ -60,7 +74,7 @@ Changes stay a linear diff against upstream master, so rebasing is easy. Most li
 ## Known limitations
 
 - `linux-x64` only; ARM64 Linux is not done (both the upstream engine packages and the Electron targets need extra adaptation).
-- Linux builds are local: no code signing and no auto-update feed.
+- Linux builds are local: no code signing and no in-app auto-update feed. Debian/Ubuntu users can subscribe to the APT repository; other formats need manual updates.
 - Tested only on glibc distributions; musl (Alpine etc.) is not covered.
 
 ## License
