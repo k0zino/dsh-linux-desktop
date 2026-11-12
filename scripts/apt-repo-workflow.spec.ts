@@ -27,12 +27,18 @@ const workflow = yaml.load(
   readFileSync(resolve(import.meta.dirname, '../.github/workflows/apt-repo.yml'), 'utf8'),
 ) as Workflow
 
+function publishJob(): Workflow['jobs'][string] {
+  const job = workflow.jobs.publish
+  if (job === undefined) throw new Error('apt workflow publish job is missing')
+  return job
+}
+
 it('publishes automatically for Linux release tags and supports manual backfills', () => {
   expect(workflow.on).toMatchObject({
     release: { types: ['published'] },
     workflow_dispatch: { inputs: { release_tag: { required: true } } },
   })
-  const publish = workflow.jobs.publish
+  const publish = publishJob()
   expect(publish.if).toContain('vars.APT_GPG_KEY_ID')
   expect(publish.if).toContain("github.event.release.tag_name != 'apt'")
   expect(publish.if).toContain("contains(github.event.release.tag_name, '-linux.')")
@@ -42,13 +48,13 @@ it('publishes automatically for Linux release tags and supports manual backfills
 })
 
 it('checks out the default branch so an old release cannot run an old publisher', () => {
-  const checkout = workflow.jobs.publish.steps.find(step => step.uses === 'actions/checkout@v7.0.1')
+  const checkout = publishJob().steps.find(step => step.uses === 'actions/checkout@v7.0.1')
   expect(checkout?.with?.ref).toBe('${{ github.event.repository.default_branch }}')
   expect(checkout?.with?.['persist-credentials']).toBe(false)
 })
 
 it('imports the signing key before running the publisher', () => {
-  const steps = workflow.jobs.publish.steps
+  const steps = publishJob().steps
   const check = steps.findIndex(step => step.name === 'Check signing configuration')
   const publish = steps.findIndex(step => step.name === 'Publish')
   expect(check).toBeGreaterThan(-1)
