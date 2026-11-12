@@ -228,11 +228,21 @@ async function stageRegistryPackage(
  * incomplete engine install instead of falling back to the WASM engine.
  */
 function patchLibreOfficeAsarProbe(): void {
-  const file = join(DSH_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', 'libreoffice-kit', 'lib', 'index.js')
   const probe = 'lstatSync(join(directory, name), { throwIfNoEntry: false }) !== void 0'
-  const source = readFileSync(file, 'utf8')
-  if (!source.includes(probe)) throw new Error('desktop runtime: LibreOfficeKit engine probe not found')
-  writeFileSync(file, source.replace(probe, 'Boolean(lstatSync(join(directory, name), { throwIfNoEntry: false }))'))
+  const files = [
+    join(DSH_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', 'libreoffice-kit', 'lib', 'index.js'),
+    join(DSH_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', 'dsh-office-kit', 'lib', 'index.js'),
+    join(DSH_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', 'dsh-office-kit', 'lib', 'types', 'locate.js'),
+  ]
+  let patched = 0
+  for (const file of files) {
+    if (!existsSync(file)) continue
+    const source = readFileSync(file, 'utf8')
+    if (!source.includes(probe)) continue
+    writeFileSync(file, source.replaceAll(probe, 'Boolean(lstatSync(join(directory, name), { throwIfNoEntry: false }))'))
+    patched++
+  }
+  if (patched === 0) throw new Error('desktop runtime: LibreOfficeKit engine probe not found')
 }
 
 /**
