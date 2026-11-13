@@ -3,7 +3,7 @@
   "description": "Electron desktop shell for a bundled dsh runtime and external plugins",
   "homepage": "https://www.deepseek.com",
   "desktopName": "deepseek-harness.desktop",
-  "version": "0.2.2-rc.2",
+  "version": "0.2.2-rc.3",
   "private": true,
   "license": "MIT",
   "author": {
