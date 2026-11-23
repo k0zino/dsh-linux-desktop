@@ -422,3 +422,27 @@ it.each([undefined, '7'])('applies file-owned compression only to the final nota
   expect(dmg?.[3].env.ELECTRON_BUILDER_COMPRESSION_LEVEL).toBe('9')
   expect(writeFileSync).toHaveBeenCalledOnce()
 })
+
+it('spawns a standalone pnpm executable instead of handing it to Node', async () => {
+  vi.stubEnv('npm_execpath', '/fixture/bin/pnpm')
+  const calls: { executable: string; args: readonly string[] }[] = []
+  const run = { directory: 'fixture-record', finish: vi.fn(),
+    run: vi.fn(async (_stage: string, executable: string, args: readonly string[]) => {
+      calls.push({ executable, args })
+    }) }
+  await packageTarget(parseDesktopPackageInvocation(['linux-x64'], 'linux', 'x64'), environment, run)
+  expect(calls.map(call => call.executable)).toEqual(calls.map(() => '/fixture/bin/pnpm'))
+  expect(calls[0]!.args[0]).toBe('run')
+})
+
+it('runs a JavaScript pnpm entry point through Node', async () => {
+  vi.stubEnv('npm_execpath', '/fixture/bin/pnpm.cjs')
+  const calls: { executable: string; args: readonly string[] }[] = []
+  const run = { directory: 'fixture-record', finish: vi.fn(),
+    run: vi.fn(async (_stage: string, executable: string, args: readonly string[]) => {
+      calls.push({ executable, args })
+    }) }
+  await packageTarget(parseDesktopPackageInvocation(['linux-x64'], 'linux', 'x64'), environment, run)
+  expect(calls[0]!.executable).toBe(process.execPath)
+  expect(calls[0]!.args[0]).toBe('/fixture/bin/pnpm.cjs')
+})
